@@ -1,0 +1,10 @@
+<operationConfig type="XML" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="factoryConfig.xsd">
+	<operation class="ical" >
+		<option name="icalFolder">C:\\Users\\jdick\\JDICK-LT_9653\\JDICK-LT_9653\\swtools\\release.br\\ical\\ical_r4x\\ical_r4_16</option>
+		<option name="icalConfig">ical_system_config.xml</option>
+		<option name="prodDefs">product_definitions</option>
+		<option name="cableLoss">ical_cable_loss.xml</option>
+		<option name="cableLossDiv">ical_cable_loss.xml</option>
+		<option name="stopOnFail">true</option>
+	</operation>			
+</operationConfig>

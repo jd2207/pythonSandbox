@@ -1,0 +1,8 @@
+<operationConfig type="XML" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="factoryConfig.xsd">
+	<operation class="iftest">
+		<option name="sysConfig">ical_system_config.xml</option>
+		<option name="prodDefs">product_definitions</option>
+		<option name="cableLoss">ical_cable_loss.xml</option>
+		<option name="cableLossDiv">ical_cable_loss.xml</option>
+	</operation>			
+</operationConfig>

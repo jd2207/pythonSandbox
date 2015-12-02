@@ -1,0 +1,19 @@
+<operationConfig type="XML" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="factoryConfig.xsd">
+	<operation id="testOp1">
+	</operation>
+	<operation id="testOp2">
+		<option name="command">command</option>
+		<option name="option1">arg1</option>
+	</operation>			
+	<operation id="testOp3">
+		<option name="command">xmlcommand</option>
+		<option name="arg1">xmlarg1</option>
+		<option name="arg2">xmlarg2</option>
+		<option name="arg3">xmlarg3</option>
+		<option name="arg4">xmlarg4</option>
+	</operation>			
+	<operation id="testOp4">
+		<option name="subprocess">command arg1 arg2 arg3 arg4</option>
+	</operation>			
+</operationConfig>
+	

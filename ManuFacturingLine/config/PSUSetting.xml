@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PSUSetting>
+  <PSUIcalOp>
+    <Vmax_V>3.5</Vmax_V>
+    <Imax_A>5</Imax_A>
+  </PSUIcalOp>
+  <PSUNormalOp>
+    <Vmax_V>3.3</Vmax_V>
+    <Imax_A>5</Imax_A>
+  </PSUNormalOp>
+  <SmokeTest>
+    <Vmax_V>3.3</Vmax_V>
+    <NoOfStep>20</NoOfStep>
+    <Imax_A>0.200</Imax_A>
+    <Pass_Fail_Limit_mA>150</Pass_Fail_Limit_mA>
+    <Open_circuit_limit_mA>10</Open_circuit_limit_mA>
+  </SmokeTest>
+  <HaltTest>
+    <Vmax_V>3.8</Vmax_V>
+    <NoOfStep>40</NoOfStep>
+    <Imax_A>0.200</Imax_A>
+    <Pass_Fail_Limit_mA>300</Pass_Fail_Limit_mA>
+    <Open_circuit_limit_mA>10</Open_circuit_limit_mA>
+  </HaltTest>
+  <PSUConfig>
+    <Name>E3631A_0</Name>
+    <IPAddr>192.168.10.200</IPAddr>
+    <GPIB>5</GPIB>
+    <MinDelay_mS>0</MinDelay_mS>
+    <VisaAddr>GPIB0::5::INSTR</VisaAddr>
+  </PSUConfig>
+  <USBSwitch>
+    <UsbRelayPort>5</UsbRelayPort>
+  </USBSwitch>
+  <BarScanner>
+    <BarScPort>3</BarScPort>
+  </BarScanner>
+</PSUSetting>

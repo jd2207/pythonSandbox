@@ -1,0 +1,99 @@
+<factoryConfig type="XML" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="factoryConfig.xsd">
+   <nvpn id="test-stub" productName="i500_1720_att">
+		<description>nvidia-e1729-nala</description>
+		<station name="testStation">
+			<description>Simple tests</description> 
+			<operation class="blockingPrompt" order="1">
+				<option name="prompt">Hit enter to continue</option>
+			</operation>
+			<operation class="testOp1" order="2">
+			</operation>
+			<operation class="testOp2" order="3">
+				<option name="command">ls</option>
+				<option name="option1">-al</option>
+			</operation>			
+			<operation class="testOp3" order="4">
+				<option name="command">command</option>
+				<option name="arg1">arg1</option>
+				<option name="arg2">arg2</option>
+				<option name="arg3">arg3</option>
+				<option name="arg4">arg4</option>
+			</operation>			
+			<operation class="testOp4" order="5">
+				<option name="subprocess">command arg1 arg2 arg3 arg4</option>
+			</operation>			
+			<operation class="testOp5" order="6">
+			</operation>			
+			<operation class="testOp6" order="7">
+			</operation>			
+		</station>
+		<station name="bbpv" productName="i500_1720_att" fuseImage="0x0,0x0,0x0,0x0,0x4,0x0,0x0">
+			<description>Baseband Product Validation</description> 
+			<operation class="blockingPrompt" order="1">
+				<option name="prompt">Please insert board. Press Enter when done.</option>
+			</operation>
+			<operation class="smokeTest" order="2">
+			</operation>
+			<operation class="blockingPrompt" order="3">
+				<option name="prompt">Please CONNECT debug adaptor (green box). Press Enter when done.</option>
+			</operation>
+			<operation class="bringupTest" order="4">
+				<option name="commandLine">BRINGUP_ICE9040_DDR_TAL.bat -warmboottest</option>
+			</operation>
+			<operation class="fwProgramming" order="5">
+				<option name="args">-9040 -hwplat p2341</option>
+				<option name="sourcePackage">source_package</option>
+				<option name="gangImage">gang_image</option>
+			</operation>
+			<operation class="blockingPrompt" order="6">
+				<option name="prompt">Please probe and check the supply voltage at C11 on the modem module. Press Enter when done.</option>
+			</operation>
+			<operation class="forceFactoryMode" order="7">
+				<option name="ATtool">atcmd-itf</option>
+			</operation>
+			<operation class="readModemFwVer" order="8">
+				<option name="ATtool">atcmd-itf</option>
+			</operation>
+			<operation class="writeSerialNum" order="9">
+				<option name="ATtool">atcmd-itf</option>
+			</operation>
+			<operation class="interfaceTest" order="10">
+				<option name="sysConfig">ical_system_config.xml</option>
+				<option name="prodDefs">product_definitions</option>
+				<option name="cableLoss">ical_cable_loss.xml</option>
+				<option name="cableLossDiv">ical_cable_loss.xml</option>
+			</operation>			
+			<operation class="modemFusing" order="11">
+				<option name="ATtool">atcmd-itf</option>
+			</operation>
+		</station>
+		<station name="rfcv" productName="i500_1720_att">
+			<description>RF Calibration and Validation</description> 
+			<operation class="blockingPrompt" order="1">
+				<option name="prompt">Please insert board. Press Enter when done.</option>
+			</operation>
+			<operation class="readSerialNum" order="2">
+				<option name="ATtool">atcmd-itf</option>
+			</operation>
+			<operation class="readModemFwVer" order="3">
+				<option name="ATtool">atcmd-itf</option>
+			</operation>
+			<operation class="iCal" order="4">
+				<option name="icalFolder">C:\\Users\\jdick\\JDICK-LT_9653\\JDICK-LT_9653\\swtools\\release.br\\ical\\ical_r4x\\ical_r4_16</option>
+				<option name="icalConfig">ical_system_config.xml</option>
+				<option name="prodDefs">product_definitions</option>
+				<option name="cableLoss">ical_cable_loss.xml</option>
+				<option name="cableLossDiv">ical_cable_loss.xml</option>
+				<option name="stopOnFail">true</option>
+			</operation>			
+  			<operation class="resice" order="5">
+				<option name="resiceFolder">C:\\Users\\jdick\\JDICK-LT_9653\\JDICK-LT_9653\\swtools\\release.br\\resice\\resice_r3x\\resice_r3_09\\</option>
+				<option name="resiceConfig">ical_system_config.xml</option>
+				<option name="prodDefs">product_definitions</option>
+				<option name="cableLoss">ical_cable_loss.xml</option>
+				<option name="cableLossDiv">ical_cable_loss.xml</option>
+				<option name="stopOnFail">true</option>
+			</operation>			
+		</station>
+	</nvpn>
+</factoryConfig>
