@@ -1,36 +1,55 @@
+""" Defines abstract and child cells. 
+    Each cell may be a member of a parent object (e.g. CellGrid) but in any case must have a defined identity (row, column)
+    Each cell class must define a method makeDescendant() which creates and returns a new cell object 
+"""
+
 import random
 
 class AbstractCell(object):
+  """ Parent class of all Cell classes """
   
-  ROW = 0
+  ROW    = 0
   COLUMN = 1
   
   def __init__(self, identity, parentGrid=None):
     self.parentGrid = parentGrid
     self.identity = identity
 
+  def makeDescendant(self):
+    """ Must be overridden by descendant classes """
+    pass
+
+  def __str__ (self):
+    return 'Cell @ (%i, %i) is a child of %s.' % (self.identity[AbstractCell.ROW], self.identity[AbstractCell.COLUMN], str(self.parentGrid))
+
 
 class BooleanCell(AbstractCell):
+  """ A simple cell that has a boolean state which can be toggled """ 
+  
   def __init__(self, identity, parentGrid=None, state=False):
     self.state = state
     super(BooleanCell,self).__init__(identity, parentGrid)
 
   def toggle(self):
+    """ flips the state """
     self.state = not self.state
     
   def makeDescendant(self):
-    return BooleanCell(self.identity, parentGrid=self.parentGrid, state= not self.state)  
+    """ creates a new BooleanCell with a toggled state """
+    newState = self.toggle()
+    return BooleanCell(self.identity, parentGrid=self.parentGrid, state = newState)  
 
   def dump(self):
-    print '(%i, %i): state: %i' % (self.identity[AbstractCell.ROW], self.identity[AbstractCell.COLUMN], self.state)
+    """ prints a string of the instance """
+    return str(self) + ' State =  %i' % self.state
 
 
 class RandomBooleanCell(BooleanCell):
+  """ A boolean cell whose descendant has a random state """
   def makeDescendant(self):
-    newState = random.randint(0,1) 
-    return RandomBooleanCell(self.identity, parentGrid=self.parentGrid, state = newState)  
+    return RandomBooleanCell(self.identity, parentGrid=self.parentGrid, state = random.randint(0,1))  
 
-
+'''
 class GameOfLifeCell(BooleanCell):
   
   def __init__(self, identity, parentGrid, state=False):          # unlike BooleanCell, GameOfLifeCell must have a parentGrid
@@ -57,7 +76,7 @@ class GameOfLifeCell(BooleanCell):
         newState = not newState             # cell comes alive
         
     return GameOfLifeCell(self.identity, parentGrid=self.parentGrid, state=newState)  
-    
+''' 
       
       
 if __name__ == '__main__':
@@ -65,6 +84,10 @@ if __name__ == '__main__':
   print 'Create a default boolean cell -----------------------------------------------'  
   a = BooleanCell( (1,1) )
   a.dump()
+  
+  '''
+
+  Need to test that abstratCell cannot be instantiated
   
   print 'State toggled'
   a.toggle()
@@ -80,4 +103,4 @@ if __name__ == '__main__':
   for i in range(5):
     r = r.makeDescendant() 
     r.dump()
-  
+  '''
