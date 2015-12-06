@@ -1,0 +1,9 @@
+
+* when orbs collide
+   - create a new orb which has combined mass
+   - v of new object is such that momentum is conserved
+   - remove the two old orbs (use del())
+   
+* orbs which go beyond a certain distance are removed (use del ())   
+   
+* update turtles at a slower rate than calculations  
