@@ -1,64 +1,73 @@
-""" Defines two related abstract classes, Cell and CellGrid and simple descendants. 
-    Each cell may be a member of a parent object (e.g. a CellGrid object)
-    Each cell is typically given a defined identity which is a tuple: (row, column)
-    Each cell class must define a method makeDescendant() which creates and returns a new object of the same class (but attributes may be different) 
-"""
+""" Module for Cell classes """
+
+import copy
 
 # -----------------------------------------------------------------------------------
 class AbstractCell(object):
-  """ Parent class of all Cell classes """
+  """ Parent class of all Cell classes 
+      Fundamentally (see AbstractCell) has an identity and a list of neighbors (typically instances the same class)
+    
+      Child classes will override the nextGen() method which will returns a modified (shallow) copy of the object 
+  """
   
-  ROW    = 0
-  COLUMN = 1
   
-  def __init__(self, identity=(0,0), parentGrid=None):
-    self.parentGrid = parentGrid
+  def __init__(self, identity, neighbors=None):
     self.identity = identity
+    self.neighbors = neighbors
 
-  def makeDescendant(self):
-    """ Must be overridden by descendant classes """
+  def nextGen(self):
+    """ Make a modified copy of self - overridden by descendants to create a modified copy"""
+    return copy.copy(self)
 
   def __str__ (self):
-    return 'Cell @ (%i, %i) is a child of %s.' % (self.identity[AbstractCell.ROW], self.identity[AbstractCell.COLUMN], str(self.parentGrid))
+    s = str(self.identity)
+    if self.neighbors != None: 
+      s += ' with neighbors:' + ( ' %s' * len(self.neighbors) % tuple([ str(n) for n in self.neighbors ]) )
+
+    return s
 
 
 # -----------------------------------------------------------------------------------
 class BooleanCell(AbstractCell):
-  """ A simple cell that has a boolean state which can be toggled 
+  """ A simple Cell that has a boolean state which can be toggled 
 
 Usage:
 >>> import Cell
->>> c = Cell.BooleanCell( (1,1), state=True)        # new cell set to True
+>>> c = Cell.BooleanCell( 'Cell 1', state=True)        # new cell set to True
 >>> c.state                                        
 True
->>> c.toggle()                                      # toggle it
+>>> str(c)
+Cell 1 State: 1 
+>>> c.toggle()                                         # toggle it
 >>> c.state
 False
->>> str(c)
-'Cell @ (1, 1) is a child of None. State = 0'
+>>> d = c.nextGen()
+>>> d.state
+Cell 1: State 1
   """ 
   
-  def __init__(self, identity, parentGrid=None, state=False):
+  def __init__(self, identity, state=False):
     self.state = state
-    super(BooleanCell,self).__init__(identity, parentGrid)
+    super(BooleanCell,self).__init__(identity)
 
   def toggle(self):
     """ flips the state """
     self.state = not self.state
     
-  def makeDescendant(self):
-    """ creates a new BooleanCell with a toggled state """
-    return BooleanCell(self.identity, parentGrid=self.parentGrid, state = not self.state)  
+  def nextGen(self):
+    """ returns a new BooleanCell with a toggled state """
+    new = super(BooleanCell,self).nextGen()
+    new.toggle()
+    return new   
 
   def __str__(self):
-    return super(BooleanCell,self).__str__() + ' State = %i' % self.state
-
+    return super(BooleanCell,self).__str__() + ' State: %i' % self.state
 
       
 
 # -----------------------------------------------------------------------------------
 class CellGrid(list):     # list of rows
-  """ parent class of all CellGrids. 
+  """ collection of Cells  
         Represents a 2D matrix of cells. 
         Implements a nextState() method such that the entire system state (state of all cells) discretely transitions to a new state, dependent on the current state   
 
@@ -131,4 +140,6 @@ Usage:
 
       
 if __name__ == '__main__':
+ 
   print "For tests use module 'testCell'"
+  

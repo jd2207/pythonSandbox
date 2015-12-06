@@ -6,46 +6,76 @@ class TestCell(unittest.TestCase):
 # Tests for AbstractCell 
 # ---------------------------------------------------------------------
 
-  def testAbstractCellDefault(self):
-    """ default instantiation """  
-    c = Cell.AbstractCell()
-    self.assertEqual(str(c), 'Cell @ (0, 0) is a child of None.')
-    
-  def testAbstractCellSpecifyIdentity(self):
-    """ instantiate with specific (row,col) identity """  
-    c = Cell.AbstractCell(identity=(1,1))
-    self.assertEqual(str(c), 'Cell @ (1, 1) is a child of None.')
+  DEFAULT_CELL = 'defaultCell'
+  DEFAULT_CELL_WITH_NEIGHBORS = 'neighboredCell'
 
+  DEFAULT_BOOLEAN_CELL = 'defaultBooleanCell'
+  DEFAULT_BOOLEAN_CELL_WITH_NEIGHBORS = 'BooleanCell'
+  BOOLEAN_CELL_NEIGHBOR1 = 'neighbor 1'
+  BOOLEAN_CELL_NEIGHBOR2 = 'neighbor 2'
+  BOOLEAN_CELL_NEIGHBOR3 = 'neighbor 3'
+  
+  def setUp(self):
+    self.defaultAbstractCell = Cell.AbstractCell(TestCell.DEFAULT_CELL)
+    self.defaultNeighboredCell = Cell.AbstractCell(TestCell.DEFAULT_CELL_WITH_NEIGHBORS, [1,2,3] )
+    
+    self.defaultBooleanCell = Cell.BooleanCell(TestCell.DEFAULT_BOOLEAN_CELL)
+    self.neighborCell1 = Cell.BooleanCell(TestCell.BOOLEAN_CELL_NEIGHBOR1)
+    self.neighborCell2 = Cell.BooleanCell(TestCell.BOOLEAN_CELL_NEIGHBOR1)
+    self.neighborCell3 = Cell.BooleanCell(TestCell.BOOLEAN_CELL_NEIGHBOR1)
+    self.BooleanCell = Cell.BooleanCell( TestCell.DEFAULT_BOOLEAN_CELL_WITH_NEIGHBORS, 
+                          [ self.neighborCell1, self.neighborCell2, self.neighborCell3] )
+  
+  def testAbstractCreateDefault(self):
+    """ default instantiation - no list of neighbors """  
+    self.assertEqual(str(self.defaultAbstractCell), TestCell.DEFAULT_CELL)
+  
+  def testAbstractNeighbors(self):  
+    """ default instantiation - with a list of neighbors """  
+    self.assertEqual(str(self.defaultNeighboredCell), 
+                     TestCell.DEFAULT_CELL_WITH_NEIGHBORS + ' with neighbors: 1 2 3')
+
+  def testAbstractNextGen(self):
+    """ default make a copy """  
+    cnext = self.defaultAbstractCell.nextGen()
+    self.assertFalse(self.defaultAbstractCell is cnext)
+    self.assertNotEqual(self.defaultAbstractCell, cnext)
+  
+    cnext = self.defaultNeighboredCell.nextGen()
+    self.assertFalse(self.defaultNeighboredCell is cnext)
+    self.assertNotEqual(self.defaultNeighboredCell, cnext)
+
+  
 # ---------------------------------------------------------------------
-# Tests for BooleanCell 
+#  Tests for BooleanCell 
 # ---------------------------------------------------------------------
 
   def testBooleanCellDefaultState(self):
     """ instantiate with default state """  
-    c = Cell.BooleanCell(identity=(1,1))
-    self.assertEqual(str(c), 'Cell @ (1, 1) is a child of None. State = 0')
+    self.assertEqual(str(self.defaultBooleanCell), TestCell.DEFAULT_BOOLEAN_CELL + ' State: 0')
+    self.assertFalse(self.defaultBooleanCell.state)
 
   def testBooleanCellToggle(self):
     """ Boolean cell can be toggled"""  
-    c = Cell.BooleanCell(identity=(1,1), state=True)
-    self.assertTrue(c.state)
-    c.toggle()
-    self.assertFalse(c.state)
-    c.toggle()
-    self.assertTrue(c.state)
-  
-  def testBooleanCellMakeDescendantChain(self):
+    self.defaultBooleanCell.toggle()
+    self.assertTrue(self.defaultBooleanCell.state)
+    self.assertEqual(str(self.defaultBooleanCell), TestCell.DEFAULT_BOOLEAN_CELL + ' State: 1')
+    self.defaultBooleanCell.toggle()
+    self.assertFalse(self.defaultBooleanCell.state)
+    self.assertEqual(str(self.defaultBooleanCell), TestCell.DEFAULT_BOOLEAN_CELL + ' State: 0')
+
+  def testBooleanCellNextGen(self):
     """ Boolean cell - make a descendant chain  """  
-    c = Cell.BooleanCell(identity=(1,1), state=True)
     for i in range(5):
-      cnext = c.makeDescendant()
-      self.assertTrue(isinstance(cnext, Cell.BooleanCell) and cnext.state != c.state)
-      c = cnext
+      cnext = self.defaultBooleanCell.nextGen()
+      self.assertTrue(isinstance(cnext, Cell.BooleanCell) and cnext.state != self.defaultBooleanCell.state)
+      self.defaultBooleanCell = cnext
+      
 
 # ---------------------------------------------------------------------
 # Tests for CellGrid 
 # ---------------------------------------------------------------------
-
+  '''
   EMPTY_GRID_STRING = \
     '------------------' + '\n'\
   + '    0  1  2  3  4 ' + '\n'\
@@ -117,6 +147,7 @@ class TestCell(unittest.TestCase):
     g = Cell.CellGrid(3,3)
     self.assertEqual( g.neighbors(0,0), [ (0,1), (1,1), (1,0) ] )
     self.assertEqual( g.neighbors(1,1), [ (0,1), (0,2), (1,2), (2,2), (2,1), (2,0), (1,0), (0,0) ] )
+  '''
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestCell)
