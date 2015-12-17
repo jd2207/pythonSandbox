@@ -1,54 +1,37 @@
-
 import Cell
 
 
 # -----------------------------------------------------------------------------------
 class GameOfLifeCell(Cell.BooleanCell):
-  """ Behaves as per Conway's Game of Life 
-      Must define a parent grid 
-  """
+  """ Behaves as per Conway's Game of Life """
   
-  def __init__(self, identity, parentGrid, state=False):          
-    super(GameOfLifeCell,self).__init__(identity, parentGrid, state)
-  
-  def makeDescendant(self):
-    g = self.parentGrid
-    
-    # Calculate the sum of the neighbors
-    n = g.neighbors(self.identity[Cell.AbstractCell.ROW], self.identity[Cell.AbstractCell.COLUMN])
-    s = 0
-    for i in n:
-      m = g[ i[0] ] [ i[1] ].state
-      s += m
-    
-    # Conway's rules: https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules
-    newState = self.state
+  def mutate(self):
+    """ update cell state according to conway's rules: https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules """
+
+    s = sum ( n.state for n in self.neighbors )   # number of alive neighbors
     if self.state:                          # if alive
-      if s > 3 or s < 2:
-        newState = not newState             # kill the alive cell
+      if s > 3 or s < 2:                    #    and 2 or 3 neighbors
+        self.toggle()                       #      kill the alive cell as by over population
     else:                                   # if dead
-      if s == 3:
-        newState = not newState             # cell comes alive
-        
-    return GameOfLifeCell(self.identity, parentGrid=self.parentGrid, state=newState)  
+      if s == 3:                            #    and there are exactly 3 neighbors
+        self.toggle()                       #      cell comes alive, as by reproduction
 
 
-# -----------------------------------------------------------------------------------
-class GameOfLifeGrid(Cell.CellGrid):
-  def createCell(self, identity):     
-    return GameOfLifeCell(identity, self)
+class GameOfLifeGrid(Cell.BooleanCellGrid):
+  def makeCell(self, rowColTupleIdentity ):
+    return GameOfLifeCell( rowColTupleIdentity )
       
 
 if __name__ == '__main__':
 
-  g = GameOfLifeGrid(3,3)
-  print str(g)
+  # Glider sequence 
+  g = GameOfLifeGrid(10, 10)
+  g.cells[0][1].state = True
+  g.cells[1][2].state = True
+  g.cells[2][0].state = True
+  g.cells[2][1].state = True
+  g.cells[2][2].state = True
   
-  # Blinker sequence
-  g[0][1].state = True
-  g[1][1].state = True
-  g[2][1].state = True
-
-  for i in range(5):
+  for i in range(20):
     print str(g)
-    g.nextState()
+    g.tick()
