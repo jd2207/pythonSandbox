@@ -1,4 +1,6 @@
 import unittest, Cell
+from pubsub import pub
+
 
 class TestCells(unittest.TestCase):
 
@@ -76,6 +78,21 @@ class TestCells(unittest.TestCase):
 # ---------------------------------------------------------------------
 # Tests for BooleanCell 
 # ---------------------------------------------------------------------
+
+  class BooleanCellViewer(object):
+    """ Basic viewer - to test pubsub functionality """
+    def __init__(self, cell):
+      self.cell = cell
+      pub.subscribe(self.cellToggled, 'Cell-Toggled')          # register to listen for Cell-Toggle events, and bind to cellToggled() 
+      self.cellToggled()
+      
+    def cellToggled(self):
+      self.color = 'black' if self.cell.state else 'white'
+
+    def __str__(self):
+      return self.color
+
+  
   def testBooleanCell(self):
     c1 = Cell.BooleanCell("Cell 1")         # default False
     c2 = Cell.BooleanCell('Cell 2', True)
@@ -83,11 +100,18 @@ class TestCells(unittest.TestCase):
     self.assertFalse(c1.state)
     self.assertEqual(c2.dump(), 'State: 1')
 
+    black = (1, "black")
+    white = (0, "white")
+    v = self.BooleanCellViewer(c1)
+    self.assertEqual( (c1.state, v.color), white)
+
     c1.mutate()
     self.assertTrue(c1.state)
+    self.assertEqual( (c1.state, v.color), black)
+    
     c1.mutate()
     self.assertFalse(c1.state)
-  
+    self.assertEqual( (c1.state, v.color), white)
 
 
 class TestCellNets(unittest.TestCase):

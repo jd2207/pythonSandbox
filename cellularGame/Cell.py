@@ -1,6 +1,8 @@
 """ Module for Cell classes """
 
 import copy
+from pubsub import pub
+
 
 class BaseCell(object):
   """ Parent class of all Cell classes 
@@ -96,7 +98,6 @@ Usage:
   def mutate(self):
     """ sets the state dependent on current state, and state of neighbors """
     self.state = sum ( cell.state for cell in self.neighbors )
-    super(IntegerCell, self).mutate()
   
   def dump(self):
     """ print out current state """
@@ -120,10 +121,11 @@ Usage:
   def mutate(self):
     """ toggle the state """
     self.toggle()
-    super(IntegerCell, self).mutate()
 
   def toggle(self):
+    """ toggle the state """
     self.state = not self.state
+    pub.sendMessage('Cell-Toggled')
 
 
 class CellNet(object):
@@ -262,9 +264,8 @@ class BooleanCellGrid(CellGrid):
     s += '---' * (cols + 1)
     return s
   
-
- 
-       
+  
+  
 if __name__ == '__main__':
   print "For tests use module 'testCell'"
-  
+
