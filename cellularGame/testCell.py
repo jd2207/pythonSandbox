@@ -1,5 +1,4 @@
 import unittest, Cell
-from pubsub import pub
 
 
 class TestCells(unittest.TestCase):
@@ -7,7 +6,6 @@ class TestCells(unittest.TestCase):
 # ---------------------------------------------------------------------
 # Tests for BaseCell 
 # ---------------------------------------------------------------------
-
   def setUp(self):
     self.cell1 = Cell.BaseCell('Cell 1')
     self.cell2 = Cell.BaseCell('Cell 2')
@@ -52,7 +50,7 @@ class TestCells(unittest.TestCase):
     self.assertTrue( cell5.descendant is cell6 )
     self.assertEqual( cell6.generation, 2 )
     self.assertEqual(str(cell6), 'Cell 6<2> A: Cell 5<1> D: None N: None ')
-
+    
 # ---------------------------------------------------------------------
 # Tests for IntegerCell 
 # ---------------------------------------------------------------------
@@ -68,8 +66,11 @@ class TestCells(unittest.TestCase):
 
     [ c4.addNeighbor(c) for c in (c1,c2,c3) ]
     
-    c4.mutate()
+    c4.mutate()                          # call mutate with no args -> calc new state using neighbors
     self.assertEqual(c4.state, 6)
+
+    c4.mutate(state=100)                 # call mutate with state keyword -> update the state to that value
+    self.assertEqual(c4.state, 100)
     
     c1.state = 10
     c5 = c4.nextGen('Cell 5')
@@ -78,21 +79,6 @@ class TestCells(unittest.TestCase):
 # ---------------------------------------------------------------------
 # Tests for BooleanCell 
 # ---------------------------------------------------------------------
-
-  class BooleanCellViewer(object):
-    """ Basic viewer - to test pubsub functionality """
-    def __init__(self, cell):
-      self.cell = cell
-      pub.subscribe(self.cellToggled, 'Cell-Toggled')          # register to listen for Cell-Toggle events, and bind to cellToggled() 
-      self.cellToggled()
-      
-    def cellToggled(self):
-      self.color = 'black' if self.cell.state else 'white'
-
-    def __str__(self):
-      return self.color
-
-  
   def testBooleanCell(self):
     c1 = Cell.BooleanCell("Cell 1")         # default False
     c2 = Cell.BooleanCell('Cell 2', True)
@@ -100,18 +86,11 @@ class TestCells(unittest.TestCase):
     self.assertFalse(c1.state)
     self.assertEqual(c2.dump(), 'State: 1')
 
-    black = (1, "black")
-    white = (0, "white")
-    v = self.BooleanCellViewer(c1)
-    self.assertEqual( (c1.state, v.color), white)
-
-    c1.mutate()
+    c1.mutate()                       # in this case mutate() should perform a toggle on the boolean
     self.assertTrue(c1.state)
-    self.assertEqual( (c1.state, v.color), black)
-    
-    c1.mutate()
-    self.assertFalse(c1.state)
-    self.assertEqual( (c1.state, v.color), white)
+
+    c2.mutate(state=True)                   # in this case mutate() should perform a toggle on the boolean
+    self.assertTrue(c2.state)
 
 
 class TestCellNets(unittest.TestCase):
@@ -147,7 +126,7 @@ class TestCellNets(unittest.TestCase):
     self.assertEqual(cn.generation, 2)
     self.assertEqual( [cell.state for cell in cn.cells], [14, 18, 20])
 
-#  ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Tests for CellGrid 
 # ---------------------------------------------------------------------
 
@@ -180,56 +159,6 @@ class TestCellNets(unittest.TestCase):
     cg.tick()
     after = cg.dump()
     self.assertEqual(after, "Gen 1:\n(0, 0)<1> A: (0, 0)<0> D: None N: ['(0, 1)<1>', '(1, 1)<1>', '(1, 0)<1>'] \n(0, 1)<1> A: (0, 1)<0> D: None N: ['(0, 2)<1>', '(1, 2)<1>', '(1, 1)<1>', '(1, 0)<1>', '(0, 0)<1>'] \n(0, 2)<1> A: (0, 2)<0> D: None N: ['(1, 2)<1>', '(1, 1)<1>', '(0, 1)<1>'] \n(1, 0)<1> A: (1, 0)<0> D: None N: ['(0, 0)<1>', '(0, 1)<1>', '(1, 1)<1>', '(2, 1)<1>', '(2, 0)<1>'] \n(1, 1)<1> A: (1, 1)<0> D: None N: ['(0, 1)<1>', '(0, 2)<1>', '(1, 2)<1>', '(2, 2)<1>', '(2, 1)<1>', '(2, 0)<1>', '(1, 0)<1>', '(0, 0)<1>'] \n(1, 2)<1> A: (1, 2)<0> D: None N: ['(0, 2)<1>', '(2, 2)<1>', '(2, 1)<1>', '(1, 1)<1>', '(0, 1)<1>'] \n(2, 0)<1> A: (2, 0)<0> D: None N: ['(1, 0)<1>', '(1, 1)<1>', '(2, 1)<1>'] \n(2, 1)<1> A: (2, 1)<0> D: None N: ['(1, 1)<1>', '(1, 2)<1>', '(2, 2)<1>', '(2, 0)<1>', '(1, 0)<1>'] \n(2, 2)<1> A: (2, 2)<0> D: None N: ['(1, 2)<1>', '(2, 1)<1>', '(1, 1)<1>'] \n")
-
-
-  def testCellBooleanGrid(self):
-
-    EMPTY_GRID_STRING = \
-        '------------------' + '\n'\
-      + '    0  1  2  3  4 ' + '\n'\
-      + ' 0  -  -  -  -  - ' + '\n'\
-      + ' 1  -  -  -  -  - ' + '\n'\
-      + ' 2  -  -  -  -  - ' + '\n'\
-      + ' 3  -  -  -  -  - ' + '\n'\
-      + ' 4  -  -  -  -  - ' + '\n'\
-      + '------------------'
-
-    FULL_GRID_STRING = \
-        '------------------' + '\n'\
-      + '    0  1  2  3  4 ' + '\n'\
-      + ' 0  *  *  *  *  * ' + '\n'\
-      + ' 1  *  *  *  *  * ' + '\n'\
-      + ' 2  *  *  *  *  * ' + '\n'\
-      + ' 3  *  *  *  *  * ' + '\n'\
-      + ' 4  *  *  *  *  * ' + '\n'\
-      + '------------------'
-
-    CROSS_PATTERN = \
-        '------------' + '\n'\
-      + '    0  1  2 ' + '\n'\
-      + ' 0  -  *  - ' + '\n'\
-      + ' 1  *  *  * ' + '\n'\
-      + ' 2  -  *  - ' + '\n'\
-      + '------------'
-  
-
-
-    # default pattern
-    bcg = Cell.BooleanCellGrid(5, 5)
-    self.assertEqual( str(bcg), EMPTY_GRID_STRING)
-    bcg.tick()
-    self.assertEqual( str(bcg), FULL_GRID_STRING)
-  
-    # setup a 'cross' pattern on a 3x3 grid
-    bcg = Cell.BooleanCellGrid(3,3)
-    [ cell.mutate() for cell in bcg.cells[0][1], bcg.cells[1][0], bcg.cells[1][1], bcg.cells[1][2], bcg.cells[2][1] ] 
-    self.assertEqual( str(bcg), CROSS_PATTERN)
-    # tick it twice should get back same pattern
-    bcg.tick()
-    bcg.tick()
-    self.assertEqual( str(bcg), CROSS_PATTERN)
-
-
 
 
 if __name__ == '__main__':

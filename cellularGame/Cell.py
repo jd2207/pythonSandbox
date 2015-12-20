@@ -1,4 +1,4 @@
-""" Module for Cell classes """
+""" Module for Cell and CellNet classes """
 
 import copy
 from pubsub import pub
@@ -6,7 +6,7 @@ from pubsub import pub
 
 class BaseCell(object):
   """ Parent class of all Cell classes 
-      Has a mandatory identity object, and a list of neighbors (which must be instances of the same class)
+      Has a mandatory identity object, and a list of neighbors (typically instances of the same class)
       Child classes will override the nextGen() method and so return a modified (shallow) copy of the object
       This copy records this cell as its ancestor 
   
@@ -37,8 +37,13 @@ class BaseCell(object):
     """ Append a new cell to the list of neighbors of this cell """
     self.neighbors.append(cell)
     
-  def mutate(self):
-    """ Overridden by descendants to change state/properties of the Cell according to specific rules"""
+  def mutate(self, **kwargs):
+    """ Change state/properties of the Cell according to specific rules of subclasses"""
+    self.modify(**kwargs)
+    pub.sendMessage('Cell-Mutation')
+  
+  def modify(self, **kwargs):
+    """ Overridden by descendants """
     pass
   
   def clone(self, identity=None):
@@ -77,7 +82,7 @@ class BaseCell(object):
 
 
 class IntegerCell(BaseCell):
-  """ A simple Cell that has an integer value
+  """ A simple Cell that has an integer value (actually - any scalar)
       It's nextGen() method returns a cell with value equal to the sum of the original cells neighbors  
 
 Usage:
@@ -92,12 +97,15 @@ Usage:
 "Cell 5" is descended from "Cell 4". Neighbors @: "Cell 1", "Cell 2", "Cell 3", State: 3  
   """ 
   def __init__(self, identity, state=0):
-    self.state = state
     super(IntegerCell,self).__init__(identity)
+    self.state = state
 
-  def mutate(self):
-    """ sets the state dependent on current state, and state of neighbors """
-    self.state = sum ( cell.state for cell in self.neighbors )
+  def modify(self, state=None):
+    """ sets the Cell state """
+    if state:
+      self.state = state
+    else:
+      self.state = sum ( cell.state for cell in self.neighbors )  # set the state to sum of neighbors """
   
   def dump(self):
     """ print out current state """
@@ -118,14 +126,12 @@ Usage:
 >>> print c3,c4
 
   """
-  def mutate(self):
-    """ toggle the state """
-    self.toggle()
-
-  def toggle(self):
-    """ toggle the state """
-    self.state = not self.state
-    pub.sendMessage('Cell-Toggled')
+  def modify(self, state=None):
+    """ set state if state given, else toggle the state """
+    if state:
+      self.state = state
+    else:
+      self.state = not self.state
 
 
 class CellNet(object):
@@ -167,6 +173,7 @@ class CellNet(object):
     
     self.cells = self.fromList(newList)               # Convert it back to a grid and overwrite the original list
     self.generation += 1
+    pub.sendMessage('CellNet-Ticked')
 
   def dump(self):
     cellList = self.toList()
@@ -205,7 +212,7 @@ class simpleCellTriangle(CellNet):
 
 
 class CellGrid(CellNet):
-  """ A specific arrangement of Cells where:
+  """ A CellNet with a specific arrangement of Cells where:
       - cells are contained in a 2-D array (rows, columns)
       - the neighbors of each cell are those which are immediately adjacent (i.e the 8 cells of the compass points for non-edge, non-corner cells) 
   """  
@@ -247,25 +254,8 @@ class BooleanCellGrid(CellGrid):
   def makeCell(self, rowColTupleIdentity ):
     return BooleanCell( rowColTupleIdentity )
 
-  def __str__(self):
-    cols = self.cols
-    s =  '---' * (cols + 1) + '\n'
-    s += '   ' +  (' %i ' * cols) % tuple(range(cols)) + '\n'
-      
-    i = 0
-    for row in self.cells:
-      j = 0
-      s += ' %i ' % i
-      for col in row:
-        s += ' * ' if self.cells[i][j].state else ' - '
-        j += 1
-      s += '\n'
-      i += 1
-    s += '---' * (cols + 1)
-    return s
-  
   
   
 if __name__ == '__main__':
   print "For tests use module 'testCell'"
-
+ 
