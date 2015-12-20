@@ -134,6 +134,7 @@ Usage:
       self.state = not self.state
 
 
+
 class CellNet(object):
   """ An abstract collection of Cells 
       The collection of Cells may be ticked() - i.e. modified en-masse according to the re-generation rules of each cell

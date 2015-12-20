@@ -65,8 +65,10 @@ class CellGridViewerController(object):
   def modifyCell(self, row, col, **kwargs):
     self.viewers[row][col].modify(**kwargs)
   
-  def tick(self):
-    self.cellGrid.tick()
+  def tick(self, generations=1):
+    """ tick() the underlying grid object a given number of times """
+    while generations>0:
+      self.cellGrid.tick(); generations -= 1
     
   def refreshOnTick(self):
     """ update all viewers to the newly generated cells """
