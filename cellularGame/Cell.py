@@ -176,13 +176,11 @@ class CellNet(object):
     self.cells = self.fromList(newList)               # Convert it back to a grid and overwrite the original list
     self.generation += 1
 
-
   def play(self, generations=1):
     """ Simulate a number of generations of the CellNet - will update controllers on completion""" 
     while generations>0:
       self.tick(); generations -= 1
-    print 'CellNet-Ticked'
-    pub.sendMessage('CellNet-Ticked')
+      pub.sendMessage('CellNet-Ticked')
 
   def dump(self):
     cellList = self.toList()

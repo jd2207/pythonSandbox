@@ -74,7 +74,10 @@ class CellGridViewerController(object):
     
   def refreshOnTick(self):
     """ recreate the viewers """
-    self.setViewers()
+    for vrow in self.viewers:
+      for v in vrow:
+          v.setCell(v.cell.descendant)
+    
     
   def __str__(self):
     """ Display a textual view of the grid state"""
