@@ -1,6 +1,5 @@
 """ simple Classes for viewing/controlling Cells and CellNets """
 
-import Cell
 from pubsub import pub
 
 
@@ -9,7 +8,7 @@ class CellViewerController(object):
     def __init__(self, cell):
       """ Associate this viewer with a Cell """
       self.setCell(cell)
-      pub.subscribe(self.refresh, 'Cell-Mutation')    # register to listen for Cell-Mutation events, and bind to a view refresh 
+      pub.subscribe(self.refresh, 'Cell-Modified')    # register to listen for Cell-Mutation events, and bind to a view refresh 
       self.refresh()
     
     def setCell(self, cell):
@@ -19,7 +18,7 @@ class CellViewerController(object):
           
     def modify(self, **kwargs):
       """ Make a change to the underlying Cell """
-      self.cell.mutate(**kwargs)
+      self.cell.modify(**kwargs)
 
     def refresh(self):
       """ Overridden by subclasses """
@@ -55,24 +54,27 @@ class CellGridViewerController(object):
   
   def __init__ (self, cellGrid):
     self.cellGrid = cellGrid
-    self.cellViewerControllerClass = self.getcellViewerControllerClass()
-    self.viewers = [ [ self.cellViewerControllerClass(cell) for cell in row ] for row in self.cellGrid.cells ]
+    self.setViewers()
     pub.subscribe(self.refreshOnTick, 'CellNet-Ticked')   # register to listen for tick() events, and bind to refreshOnTick() 
     
   def getcellViewerControllerClass(self):
-    return getattr(__import__('CellViewerController'), 'CellViewerController')
+    return 'CellViewerController'
+
+  def setViewers(self):
+    cellViewerControllerClass = self.getcellViewerControllerClass()
+    self.viewers = [ [ getattr(__import__('CellViewerController'), cellViewerControllerClass)(cell) for cell in row ] for row in self.cellGrid.cells ]
+    return 
     
   def modifyCell(self, row, col, **kwargs):
-    self.viewers[row][col].modify(**kwargs)
+    self.cellGrid.cells[row][col].modify(**kwargs)    
   
-  def tick(self, generations=1):
+  def play(self, generations=1):
     """ tick() the underlying grid object a given number of times """
-    while generations>0:
-      self.cellGrid.tick(); generations -= 1
+    self.cellGrid.play(generations)
     
   def refreshOnTick(self):
-    """ update all viewers to the newly generated cells """
-    [ [ v.setCell(v.cell.descendant) for v in row ] for row in self.viewers ]
+    """ recreate the viewers """
+    self.setViewers()
     
   def __str__(self):
     """ Display a textual view of the grid state"""
@@ -119,7 +121,7 @@ class BooleanGridViewerController(CellGridViewerController):
   """
     
   def getcellViewerControllerClass(self):
-    return getattr(__import__('CellViewerController'), 'BooleanCellViewerController')
+    return 'BooleanCellViewerController'
 
 
 

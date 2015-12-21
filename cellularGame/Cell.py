@@ -32,17 +32,18 @@ class BaseCell(object):
     self.ancestor = None
     self.descendant = None
     self.generation = 0
-
+    
   def addNeighbor(self, cell):
     """ Append a new cell to the list of neighbors of this cell """
     self.neighbors.append(cell)
     
-  def mutate(self, **kwargs):
-    """ Change state/properties of the Cell according to specific rules of subclasses"""
-    self.modify(**kwargs)
-    pub.sendMessage('Cell-Mutation')
-  
   def modify(self, **kwargs):
+    """ Change state/properties of the Cell according to specific rules of subclasses"""
+    self.mutate(**kwargs)
+    print 'Cell-Modified'
+    pub.sendMessage('Cell-Modified')
+  
+  def mutate(self, **kwargs):
     """ Overridden by descendants """
     pass
   
@@ -56,7 +57,7 @@ class BaseCell(object):
     return new
 
   def nextGen(self, identity=None):
-    """ Create a cloned copy of self, and modify according to the rules of this class"""
+    """ Create a cloned copy of self, and mutate according to the rules of this class"""
     new = self.clone(identity)
     new.mutate()
     return new
@@ -100,7 +101,7 @@ Usage:
     super(IntegerCell,self).__init__(identity)
     self.state = state
 
-  def modify(self, state=None):
+  def mutate(self, state=None):
     """ sets the Cell state """
     if state:
       self.state = state
@@ -126,7 +127,7 @@ Usage:
 >>> print c3,c4
 
   """
-  def modify(self, state=None):
+  def mutate(self, state=None):
     """ set state if state given, else toggle the state """
     if state:
       self.state = state
@@ -165,8 +166,8 @@ class CellNet(object):
     return cells
   
   def tick(self):
-    """ regenerate the Cells of the entire grid """                             
-    cellList = self.toList()                        # Convert the grid to a one dimensional list
+    """ regenerate the Cells of the entire grid  - no update to controllers """                             
+    cellList = self.toList()                            # Convert the grid to a one dimensional list
     newList = [ cell.nextGen() for cell in cellList ]   # Create a list of cells based on old one
 
     for cell in newList:                                # the neighbors of every new cell need to be the descendants of old neighbors
@@ -174,6 +175,13 @@ class CellNet(object):
     
     self.cells = self.fromList(newList)               # Convert it back to a grid and overwrite the original list
     self.generation += 1
+
+
+  def play(self, generations=1):
+    """ Simulate a number of generations of the CellNet - will update controllers on completion""" 
+    while generations>0:
+      self.tick(); generations -= 1
+    print 'CellNet-Ticked'
     pub.sendMessage('CellNet-Ticked')
 
   def dump(self):

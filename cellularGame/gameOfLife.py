@@ -4,7 +4,7 @@ import Cell, CellViewerController
 class GameOfLifeCell(Cell.BooleanCell):
   """ Behaves as per Conway's Game of Life """
   
-  def modify(self, state=None):
+  def mutate(self, state=None):
     """ update cell state according to conway's rules: https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules """
 
     if state:
@@ -25,22 +25,25 @@ class GameOfLifeGrid(Cell.BooleanCellGrid):
     return GameOfLifeCell( rowColTupleIdentity )
       
 
+import time
 
 if __name__ == '__main__':
 
   # Glider sequence 
-  g = GameOfLifeGrid(10, 10)
+  g = GameOfLifeGrid(100, 100)
   v = CellViewerController.BooleanGridViewerController(g)
 
-  print 'An initial glider:'
+  print 'An initial glider: ', time.clock()
   # Initial glider
   v.modifyCell(0,1,state=1)
   v.modifyCell(1,2,state=1)
   v.modifyCell(2,0,state=1)
   v.modifyCell(2,1,state=1)
   v.modifyCell(2,2,state=1)
-  print v
+  print v 
   
-  print 'Glider after 20 generations:'
-  v.tick(20)
-  print v
+  generations = 10
+  for i in range(10):
+    v.play(generations)
+    print 'Glider after %i generations:' % ((i+1)*generations)
+    print time.clock(),'\n',v

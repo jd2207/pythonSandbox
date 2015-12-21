@@ -23,12 +23,12 @@ class TestCellsMVC(unittest.TestCase):
     self.assertTrue( v.cell is c2)
     self.assertEqual( v.strValue, '99')
 
-# two types of mutation. Each should update the viewer string  
-    c2.mutate()               # mutate according to Cells internal rules
+# two types of modification. Each should update the viewer string  
+    v.modify()               # mutate according to Cells internal rules
     self.assertEqual( v.strValue, '0')
 
     v.setCell(c1)             
-    c1.mutate(state=50)       # mutate according to **kwargs
+    c1.modify(state=50)       # mutate according to **kwargs
     self.assertEqual( v.strValue, '50')
 
 
@@ -43,11 +43,11 @@ class TestCellsMVC(unittest.TestCase):
     v = CellViewerController.BooleanCellViewerController(c1)
     self.assertEqual( v.strValue,'-')
 
-# two type of mutation. each should update the viewer string  
-    c1.mutate()
+# two type of modification; each should update the viewer string  
+    v.modify()
     self.assertEqual( v.strValue,'*')
 
-    c1.mutate(state=False)
+    v.modify(state=False)
     self.assertEqual( v.strValue,'-')
     
 
@@ -77,7 +77,7 @@ class TestCellsMVC(unittest.TestCase):
     self.assertTrue( gridViewerController.viewers[1][1].cell.state )  
 
   # test, after a tick() that the cells pointed to by all the viewers are still aligned with the model 
-    gridViewerController.tick()
+    gridViewerController.play()
     self.checkViewerCellsMatchModelCells(gridViewerController, bcg)
 
 
@@ -116,17 +116,16 @@ class TestCellsMVC(unittest.TestCase):
     bcg = Cell.BooleanCellGrid(5, 5)
     v = CellViewerController.BooleanGridViewerController(bcg)
     self.assertEqual( str(v), EMPTY_GRID_STRING)
-    v.tick()
+    v.play()
     self.assertEqual( str(v), FULL_GRID_STRING)
   
     # setup a 'cross' pattern on a 3x3 grid, should be reflected in the viewer
     bcg = Cell.BooleanCellGrid(3,3)
     v = CellViewerController.BooleanGridViewerController(bcg)
-    [ cell.mutate() for cell in bcg.cells[0][1], bcg.cells[1][0], bcg.cells[1][1], bcg.cells[1][2], bcg.cells[2][1] ] 
+    v.modifyCell(0,1); v.modifyCell(1,0); v.modifyCell(1,1); v.modifyCell(1,2); v.modifyCell(2,1);
     self.assertEqual( str(v), CROSS_PATTERN)
     # tick it twice should get back same pattern
-    v.tick()
-    v.tick()
+    v.play(2)
     self.assertEqual( str(v), CROSS_PATTERN)
 
 
@@ -136,7 +135,6 @@ class TestCellsMVC(unittest.TestCase):
     for i in range( len(model.cells) ):
       for j in range ( len( model.cells[i] )):
         self.assertTrue( viewer.viewers[i][j].cell is model.cells[i][j], 'Cell (%i, %i)' % (i,j))  
-
 
 
 if __name__ == '__main__':
