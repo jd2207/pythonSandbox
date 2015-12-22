@@ -1,0 +1,7 @@
+# This is a config file read when initialising the GUI
+# It is used to enable or disable some features.
+# A feature can be disabled with a 'False' value in definition
+#  and enabled with a 'True'.
+
+ALLOW_INTERFACE_SWITCH = True
+ALLOW_UNLOCK_BOARD = False
