@@ -7,8 +7,16 @@ from pubsub import pub
 class BaseCell(object):
   """ Parent class of all Cell classes 
       Has a mandatory identity object, and a list of neighbors (typically instances of the same class)
-      Child classes will override the nextGen() method and so return a modified (shallow) copy of the object
-      This copy records this cell as its ancestor 
+  
+      A Cell may be modified in two manners:
+        - change internal properties of the instance directly - see update() method 
+        - change internal properties of the instance depending on the existing properties of the Cell - see mutate() method 
+        
+      Hence Child class override update() and mutate() methods 
+
+      A new generation of a cell can made (see nextGen() ) whereby a copy of cell is made which uses mutate() method  
+
+      The modify() method must used by Cell Controllers to ensure that Cell Viewers can be updated.  
   
   Usage:
   >>> import Cell
@@ -37,16 +45,23 @@ class BaseCell(object):
     """ Append a new cell to the list of neighbors of this cell """
     self.neighbors.append(cell)
     
-  def modify(self, **kwargs):
-    """ Change state/properties of the Cell according to specific rules of subclasses"""
-    self.mutate(**kwargs)
-    print 'Cell-Modified'
+  def modify(self, mutate=False, **kwargs):
+    """ Change state/properties of the Cell """
+    if mutate: 
+      self.mutate()                     # change according to specific rules of subclasses
+    else:
+      self.update(**kwargs)             # change by overridden update() and **kwargs
+      
     pub.sendMessage('Cell-Modified')
-  
-  def mutate(self, **kwargs):
+    
+  def mutate(self):
     """ Overridden by descendants """
     pass
   
+  def update(self, **kwargs):
+    """ Overridden by descendants """
+    pass
+
   def clone(self, identity=None):
     """ Make a (shallow) copy of self and (optionally) change the identity """
     new = copy.copy(self)
@@ -101,13 +116,14 @@ Usage:
     super(IntegerCell,self).__init__(identity)
     self.state = state
 
-  def mutate(self, state=None):
+  def mutate(self):
     """ sets the Cell state """
-    if state:
-      self.state = state
-    else:
-      self.state = sum ( cell.state for cell in self.neighbors )  # set the state to sum of neighbors """
+    self.state = sum ( cell.state for cell in self.neighbors )  # set the state to sum of neighbors """
   
+  def update(self, state=0):
+    """ sets the Cell state """
+    self.state = state
+
   def dump(self):
     """ print out current state """
     return 'State: %i' % self.state
@@ -116,8 +132,8 @@ Usage:
 
 class BooleanCell(IntegerCell):
   """ A simpler version of Integer cell where state is a boolean value
-      update() method toggles the state so nextGen() creates a new BooleanCell with the inverse state to the ancestor cell 
-  
+      mutate() and update() both toggle the cell state
+      
 Usage:
 >>> import Cell
 >>> c1 = Cell.BooleanCell( 'Cell 1') 
@@ -127,12 +143,13 @@ Usage:
 >>> print c3,c4
 
   """
-  def mutate(self, state=None):
-    """ set state if state given, else toggle the state """
-    if state:
-      self.state = state
-    else:
-      self.state = not self.state
+  def mutate(self):
+    """ toggles the state """
+    self.state = not self.state
+
+  def update(self):
+    """ toggles the state """
+    self.state = not self.state
 
 
 
@@ -165,23 +182,20 @@ class CellNet(object):
     """ convert a list of Cells to create a new CellNet of this class -  overridden by child classes""" 
     return cells
   
-  def tick(self):
-    """ regenerate the Cells of the entire grid  - no update to controllers """                             
-    cellList = self.toList()                            # Convert the grid to a one dimensional list
-    newList = [ cell.nextGen() for cell in cellList ]   # Create a list of cells based on old one
+  def tick(self, generations=1):
+    """ regenerate the Cells of the entire grid and update viewers """                             
+    while generations > 0:
+      cellList = self.toList()                            # Convert the grid to a one dimensional list
+      newList = [ cell.nextGen() for cell in cellList ]   # Create a list of cells based on old one
 
-    for cell in newList:                                # the neighbors of every new cell need to be the descendants of old neighbors
-      cell.neighbors = [ n.descendant for n in cell.neighbors ]
+
+      for cell in newList:                                # the neighbors of every new cell need to be the descendants of old neighbors
+        cell.neighbors = [ n.descendant for n in cell.neighbors ]
     
-    self.cells = self.fromList(newList)               # Convert it back to a grid and overwrite the original list
-    self.generation += 1
-
-  def play(self, generations=1):
-    """ Simulate a number of generations of the CellNet - will update controllers on completion""" 
-    while generations>0:
-      self.tick(); generations -= 1
+      self.cells = self.fromList(newList)               # Convert it back to a grid and overwrite the original list
+      self.generation += 1; generations -= 1
       pub.sendMessage('CellNet-Ticked')
-
+  
   def dump(self):
     cellList = self.toList()
     return 'Gen %i:\n' % self.generation + \

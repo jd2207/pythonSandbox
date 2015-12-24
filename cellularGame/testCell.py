@@ -66,15 +66,35 @@ class TestCells(unittest.TestCase):
 
     [ c4.addNeighbor(c) for c in (c1,c2,c3) ]
     
-    c4.mutate()                          # call mutate with no args -> calc new state using neighbors
+    c4.mutate()                          # new state depends on neighbor state
     self.assertEqual(c4.state, 6)
 
-    c4.mutate(state=100)                 # call mutate with state keyword -> update the state to that value
+    c4.update(state=100)                 # directly change state 
     self.assertEqual(c4.state, 100)
     
     c1.state = 10
-    c5 = c4.nextGen('Cell 5')
+    c5 = c4.nextGen('Cell 5')            # nextGen includes a mutate()
     self.assertEqual(c5.state, 16)
+  
+  # test modify() method
+    c5.modify()                         # modify with no args equals return to default state
+    self.assertEqual(c5.state, 0)
+    
+    c5.state = 100
+    c5.modify(False)                    # modify with arg1=False equals same as no args
+    self.assertEqual(c5.state, 0)
+    
+    c5.state = 100
+    c5.modify(True)                     # modify with arg1=True equals same as mutate()
+    self.assertEqual(c5.state, 16)
+
+    c5.state = 100
+    c5.modify(True, state=99)          # modify with arg1=True and kwargs -> ignore the kwargs
+    self.assertEqual(c5.state, 16)
+
+    c5.state = 100
+    c5.modify(False, state=99)          # modify with arg1=False equals same as update()
+    self.assertEqual(c5.state, 99)
   
 # ---------------------------------------------------------------------
 # Tests for BooleanCell 
@@ -86,11 +106,12 @@ class TestCells(unittest.TestCase):
     self.assertFalse(c1.state)
     self.assertEqual(c2.dump(), 'State: 1')
 
-    c1.mutate()                       # in this case mutate() should perform a toggle on the boolean
+    c1.mutate()                    # in this case mutate() should perform a toggle on the boolean
     self.assertTrue(c1.state)
 
-    c2.mutate(state=True)                   # in this case mutate() should perform a toggle on the boolean
-    self.assertTrue(c2.state)
+    c2.update()                    # update also means toggle for BooleanCells 
+    self.assertFalse(c2.state)
+
 
 
 class TestCellNets(unittest.TestCase):
@@ -159,7 +180,6 @@ class TestCellNets(unittest.TestCase):
     cg.tick()
     after = cg.dump()
     self.assertEqual(after, "Gen 1:\n(0, 0)<1> A: (0, 0)<0> D: None N: ['(0, 1)<1>', '(1, 1)<1>', '(1, 0)<1>'] \n(0, 1)<1> A: (0, 1)<0> D: None N: ['(0, 2)<1>', '(1, 2)<1>', '(1, 1)<1>', '(1, 0)<1>', '(0, 0)<1>'] \n(0, 2)<1> A: (0, 2)<0> D: None N: ['(1, 2)<1>', '(1, 1)<1>', '(0, 1)<1>'] \n(1, 0)<1> A: (1, 0)<0> D: None N: ['(0, 0)<1>', '(0, 1)<1>', '(1, 1)<1>', '(2, 1)<1>', '(2, 0)<1>'] \n(1, 1)<1> A: (1, 1)<0> D: None N: ['(0, 1)<1>', '(0, 2)<1>', '(1, 2)<1>', '(2, 2)<1>', '(2, 1)<1>', '(2, 0)<1>', '(1, 0)<1>', '(0, 0)<1>'] \n(1, 2)<1> A: (1, 2)<0> D: None N: ['(0, 2)<1>', '(2, 2)<1>', '(2, 1)<1>', '(1, 1)<1>', '(0, 1)<1>'] \n(2, 0)<1> A: (2, 0)<0> D: None N: ['(1, 0)<1>', '(1, 1)<1>', '(2, 1)<1>'] \n(2, 1)<1> A: (2, 1)<0> D: None N: ['(1, 1)<1>', '(1, 2)<1>', '(2, 2)<1>', '(2, 0)<1>', '(1, 0)<1>'] \n(2, 2)<1> A: (2, 2)<0> D: None N: ['(1, 2)<1>', '(2, 1)<1>', '(1, 1)<1>'] \n")
-
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestCells)

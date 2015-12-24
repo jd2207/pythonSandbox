@@ -4,45 +4,59 @@ from pubsub import pub
 
 
 class CellViewerController(object):
-    """ Super simpler 'viewer' - used to test pubsub functionality on a Cell"""
+    """ Super simpler 'py' - used to test pubsub functionality on a Cell"""
     def __init__(self, cell):
-      """ Associate this viewer with a Cell """
+      """ Associate this py with a Cell """
       self.setCell(cell)
-      pub.subscribe(self.refresh, 'Cell-Modified')    # register to listen for Cell-Mutation events, and bind to a view refresh 
+      pub.subscribe(self.refresh, 'Cell-Modified')    # register to listen for Cell-Modified events, and bind to a view refresh 
       self.refresh()
     
     def setCell(self, cell):
-      """ Point the viewer to a (different) cell """
+      """ Point the py to a (different) cell """
       self.cell = cell
       self.refresh()
           
-    def modify(self, **kwargs):
+    def mutateCell(self):
       """ Make a change to the underlying Cell """
-      self.cell.modify(**kwargs)
+      self.cell.modify(True)
+      
+    def updateCell(self, **kwargs):
+      self.cell.modify(False, **kwargs)
 
     def refresh(self):
+      """ Default refresh simply updated the string associated with the CellVC """
+      self.updateStr()
+    
+    def updateStr(self):
       """ Overridden by subclasses """
-      self.strValue = 'X'
-      
+      self.strValue = self.cell.identity
+
     def __str__(self):
-      return self.strValue
+      """ Overridden by subclasses """
+      return self.strValue 
 
 
 
 class IntegerCellViewerController(CellViewerController):
-    """ Simple viewer/controller specific for IntegerCell"""
-          
-    def refresh(self):
+    """ Simple py/controller specific for IntegerCell"""
+    
+    def updateStr(self):
       self.strValue = str(self.cell.state)
 
 
 
 class BooleanCellViewerController(CellViewerController):
-    """ Simple viewer/controller specific for BooleanCell"""
+    """ Simple py/controller specific for BooleanCell"""
           
-    def refresh(self):
+    def updateStr(self):
       self.strValue = '*' if self.cell.state else '-'
+      
 
+
+
+# ==================================================================================================
+# Grid Viewer Controllers 
+# ==================================================================================================
 
 
 class CellGridViewerController(object):
@@ -57,20 +71,23 @@ class CellGridViewerController(object):
     self.setViewers()
     pub.subscribe(self.refreshOnTick, 'CellNet-Ticked')   # register to listen for tick() events, and bind to refreshOnTick() 
     
-  def getcellViewerControllerClass(self):
-    return 'CellViewerController'
-
   def setViewers(self):
-    cellViewerControllerClass = self.getcellViewerControllerClass()
-    self.viewers = [ [ getattr(__import__('CellViewerController'), cellViewerControllerClass)(cell) for cell in row ] for row in self.cellGrid.cells ]
-    return 
+    """ Overridden by subclasses - creates a list of CellViewerController objects for the grid"""
+    self.viewers = [ [ CellViewerController.CellViewerController(cell) for cell in row ] for row in self.cellGrid.cells ]
     
-  def modifyCell(self, row, col, **kwargs):
-    self.cellGrid.cells[row][col].modify(**kwargs)    
+  def mutateCell(self, row, col):
+    cell = self.cellGrid.cells[row][col]
+    cell.mutate()
+    self.viewers[row][col].refresh()    
+    
+  def updateCell(self, row, col, **kwargs):
+    cell = self.cellGrid.cells[row][col]
+    cell.update(**kwargs)
+    self.viewers[row][col].refresh()    
   
   def play(self, generations=1):
     """ tick() the underlying grid object a given number of times """
-    self.cellGrid.play(generations)
+    self.cellGrid.tick(generations)
     
   def refreshOnTick(self):
     """ recreate the viewers """
@@ -78,6 +95,9 @@ class CellGridViewerController(object):
       for v in vrow:
           v.setCell(v.cell.descendant)
     
+  def refresh(self):
+    """ Overridden by subclasses """
+    pass
     
   def __str__(self):
     """ Display a textual view of the grid state"""
@@ -123,9 +143,9 @@ class BooleanGridViewerController(CellGridViewerController):
 ------------
   """
     
-  def getcellViewerControllerClass(self):
-    return 'BooleanCellViewerController'
-
+  def setViewers(self):
+    """ Overridden by subclasses - creates a list of CellViewerController objects for the grid"""
+    self.viewers = [ [ BooleanCellViewerController(cell) for cell in row ] for row in self.cellGrid.cells ]
 
 
   

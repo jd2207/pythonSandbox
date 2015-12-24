@@ -6,18 +6,13 @@ class GameOfLifeCell(Cell.BooleanCell):
   
   def mutate(self, state=None):
     """ update cell state according to conway's rules: https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules """
-
-    if state:
-      self.state = state
-    else:
-      s = sum ( n.state for n in self.neighbors )   # number of alive neighbors
-      if self.state:                          # if alive
-        if s > 3 or s < 2:                    #    and 2 or 3 neighbors
-          self.state = False                  #      kill the alive cell as by over population
-      else:                                   # if dead
-        if s == 3:                            #    and there are exactly 3 neighbors
-          self.state = True                   #      cell comes alive, as by reproduction
-
+    s = sum ( n.state for n in self.neighbors )   # number of alive neighbors
+    if self.state:                          # if alive
+      if s > 3 or s < 2:                    #    and 2 or 3 neighbors
+        self.state = False                  #      kill the alive cell as by over population
+    else:                                   # if dead
+      if s == 3:                            #    and there are exactly 3 neighbors
+        self.state = True                   #      cell comes alive, as by reproduction
 
 
 class GameOfLifeGrid(Cell.BooleanCellGrid):
@@ -35,15 +30,11 @@ if __name__ == '__main__':
 
   print 'An initial glider: ', time.clock()
   # Initial glider
-  v.modifyCell(0,1,state=1)
-  v.modifyCell(1,2,state=1)
-  v.modifyCell(2,0,state=1)
-  v.modifyCell(2,1,state=1)
-  v.modifyCell(2,2,state=1)
+  v.updateCell(0,1); v.updateCell(1,2);  v.updateCell(2,0);  v.updateCell(2,1);  v.updateCell(2,2)
   print v 
-  
-  generations = 10
-  for i in range(10):
-    v.play(generations)
-    print 'Glider after %i generations:' % ((i+1)*generations)
+
+  generationLeaps = 40
+  for i in range(3):
+    v.play(generationLeaps)
+    print 'Glider after %i generations:' % ((i+1)*generationLeaps)
     print time.clock(),'\n',v
