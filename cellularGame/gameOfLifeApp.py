@@ -1,12 +1,12 @@
 import wx 
-import Cell, CellViewerController
+import Cell, CellNet
 import gameOfLife
 
 
-class testFrame(wx.Frame, CellViewerController.BooleanGridViewerController):
+class testFrame(wx.Frame, CellNet.BooleanGrid_VC):
   def __init__(self, parent, title, cellGrid):
     wx.Frame.__init__(self, parent, title=title, size=(500, 500))
-    CellViewerController.BooleanGridViewerController.__init__(self, cellGrid)
+    CellNet.BooleanGrid_VC.__init__(self, cellGrid)
             
     menubar = wx.MenuBar()
     fileMenu = wx.Menu()
@@ -38,10 +38,10 @@ class testFrame(wx.Frame, CellViewerController.BooleanGridViewerController):
   
         
 
-class BooleanCellPanel(wx.Panel, CellViewerController.BooleanCellViewerController):
+class BooleanCellPanel(wx.Panel, Cell.BooleanCell_VC):
   def __init__(self, parent, cell):
     wx.Panel.__init__(self, parent)
-    CellViewerController.BooleanCellViewerController.__init__(self, cell)
+    Cell.BooleanCell_VC.__init__(self, cell)
     self.Bind(wx.EVT_LEFT_UP, self.toggleCell)
           
   def toggleCell(self, e):
@@ -50,7 +50,7 @@ class BooleanCellPanel(wx.Panel, CellViewerController.BooleanCellViewerControlle
   def refresh(self):   
     clr = wx.Colour(0,0,0) if self.cell.state else wx.Colour(255,255,255)  
     self.SetBackgroundColour( clr )
-    CellViewerController.BooleanCellViewerController.refresh(self)
+    Cell.BooleanCell_VC.refresh(self)
     wx.Panel.Refresh(self) 
 
       

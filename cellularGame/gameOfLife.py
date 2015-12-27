@@ -1,4 +1,4 @@
-import Cell, CellViewerController
+import Cell, CellNet
 
 
 class GameOfLifeCell(Cell.BooleanCell):
@@ -15,7 +15,7 @@ class GameOfLifeCell(Cell.BooleanCell):
         self.state = True                   #      cell comes alive, as by reproduction
 
 
-class GameOfLifeGrid(Cell.BooleanCellGrid):
+class GameOfLifeGrid(CellNet.BooleanCellGrid):
   def makeCell(self, rowColTupleIdentity ):
     return GameOfLifeCell( rowColTupleIdentity )
       
@@ -25,16 +25,16 @@ import time
 if __name__ == '__main__':
 
   # Glider sequence 
-  g = GameOfLifeGrid(100, 100)
-  v = CellViewerController.BooleanGridViewerController(g)
+  g = GameOfLifeGrid(20, 20)
+  vc = CellNet.BooleanGrid_VC(g)
 
   print 'An initial glider: ', time.clock()
   # Initial glider
-  v.updateCell(0,1); v.updateCell(1,2);  v.updateCell(2,0);  v.updateCell(2,1);  v.updateCell(2,2)
-  print v 
+  vc.updateCell(0,1); vc.updateCell(1,2);  vc.updateCell(2,0);  vc.updateCell(2,1);  vc.updateCell(2,2)
+  print vc 
 
-  generationLeaps = 40
+  generationLeaps = 4
   for i in range(3):
-    v.play(generationLeaps)
+    vc.play(generationLeaps)
     print 'Glider after %i generations:' % ((i+1)*generationLeaps)
-    print time.clock(),'\n',v
+    print time.clock(),'\n',vc

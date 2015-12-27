@@ -1,4 +1,5 @@
 import unittest, Cell
+from Cell import Cell_VC
 
 
 class TestCells(unittest.TestCase):
@@ -51,11 +52,12 @@ class TestCells(unittest.TestCase):
     self.assertEqual( cell6.generation, 2 )
     self.assertEqual(str(cell6), 'Cell 6<2> A: Cell 5<1> D: None N: None ')
     
+    
 # ---------------------------------------------------------------------
 # Tests for IntegerCell 
 # ---------------------------------------------------------------------
   def testIntegerCell(self):
-    """ test constructor """
+    """ tests specific to IntegerCell """
     c1 = Cell.IntegerCell("Cell 1")         # default state
     c2 = Cell.IntegerCell('Cell 2', 1)
     c3 = Cell.IntegerCell('Cell 3', 5)
@@ -100,6 +102,7 @@ class TestCells(unittest.TestCase):
 # Tests for BooleanCell 
 # ---------------------------------------------------------------------
   def testBooleanCell(self):
+    """ tests specific to BooleanCell """
     c1 = Cell.BooleanCell("Cell 1")         # default False
     c2 = Cell.BooleanCell('Cell 2', True)
     
@@ -111,6 +114,73 @@ class TestCells(unittest.TestCase):
 
     c2.update()                    # update also means toggle for BooleanCells 
     self.assertFalse(c2.state)
+
+
+# ---------------------------------------------------------------------
+# Tests for CellViewerController 
+# ---------------------------------------------------------------------
+  def testCell_VC(self):
+    """ general tests for Cell Viewer/Controllers """
+
+# create a BaseCell and a Viewer/Controller
+    c1 = Cell.BaseCell('Cell 1')
+    vc = Cell_VC(c1)
+    
+# check association and initial value of the viewer/controller string
+    self.assertTrue( vc.cell is c1)
+    self.assertEqual( str(vc), 'Cell 1')
+
+# test setCell 
+    c2 = Cell.BaseCell('Cell 2')
+    vc.setCell(c2)
+    self.assertTrue( vc.cell is c2)
+    self.assertEqual( str(vc), 'Cell 2')
+
+# ---------------------------------------------------------------------
+# Tests for IntegerCellViewerController 
+# ---------------------------------------------------------------------
+  def testIntegerCell_VC(self):
+    """ tests specific to Integer Cell VC """
+
+# create an IntegerCell and a Viewer/Controller
+    c1 = Cell.IntegerCell('Cell1')
+    vc = Cell.IntegerCell_VC(c1)
+    
+# check association and initial value of the viewer/controller string
+    self.assertEqual( str(vc), '0')
+
+# set up neighbors of c1
+    c2 = Cell.IntegerCell('Cell2', state=5)
+    c3 = Cell.IntegerCell('Cell3', state=10)
+    c1.addNeighbor(c2)
+    c1.addNeighbor(c3)
+    
+# two types of modification. Each should update the py string  
+    vc.mutateCell()        # mutate according to Cells internal rules
+    self.assertEqual( str(vc), '15')
+
+    vc.updateCell(state=50)             
+    self.assertEqual( str(vc), '50')
+
+# ---------------------------------------------------------------------
+# Tests for BooleanCellViewer 
+# ---------------------------------------------------------------------
+  def testBooleanCell_VC(self):
+    """ tests specific to Boolean Cell VC """
+
+# create a boolean cell and a viewer/controller
+    c1 = Cell.BooleanCell('Cell1')
+    vc = Cell.BooleanCell_VC(c1)
+
+# check association and initial value of the viewer/controller string
+    self.assertEqual( str(vc),'-')
+
+# two types of modification. Each should update the viewer/controller string  
+    vc.mutateCell()     
+    self.assertEqual( str(vc), '*')
+
+    vc.updateCell()             
+    self.assertEqual( str(vc), '-')
 
 
 

@@ -1,4 +1,4 @@
-""" Module for Cell and CellNet classes """
+""" Module for Cell classes and associated simple viewer/controllers """
 
 import copy
 from pubsub import pub
@@ -16,7 +16,8 @@ class BaseCell(object):
 
       A new generation of a cell can made (see nextGen() ) whereby a copy of cell is made which uses mutate() method  
 
-      The modify() method must used by Cell Controllers to ensure that Cell Viewers can be updated.  
+      The modify() method must used by Cell Controllers to ensure that Cell Viewers 
+      can be updated (via pypubsub message).   
   
   Usage:
   >>> import Cell
@@ -55,11 +56,11 @@ class BaseCell(object):
     pub.sendMessage('Cell-Modified')
     
   def mutate(self):
-    """ Overridden by descendants """
+    """ Overridden by descendants - rules for cell self-modification"""
     pass
   
   def update(self, **kwargs):
-    """ Overridden by descendants """
+    """ Overridden by descendants - general method for modifying cell """
     pass
 
   def clone(self, identity=None):
@@ -78,6 +79,7 @@ class BaseCell(object):
     return new
 
   def identityString(self):
+    """ used by __str__() and for debug """
     return '%s<%i>' % (str(self.identity), self.generation)
 
   def __str__ (self):
@@ -98,8 +100,8 @@ class BaseCell(object):
 
 
 class IntegerCell(BaseCell):
-  """ A simple Cell that has an integer value (actually - any scalar)
-      It's nextGen() method returns a cell with value equal to the sum of the original cells neighbors  
+  """ A simple Cell that has an integer value
+      It's nextGen() method returns a cell with value equal to the sum of the cells present neighbors  
 
 Usage:
 >>> import Cell
@@ -151,6 +153,62 @@ Usage:
     """ toggles the state """
     self.state = not self.state
   
+  
+# -----------------------------------------------------------------
+# Cell Viewer / Controllers
+# -----------------------------------------------------------------
+
+class Cell_VC(object):
+    """ Simple Viewer/Controller of Cell """
+    def __init__(self, cell):
+      """ Associate this VC with a Cell """
+      self.setCell(cell)
+      pub.subscribe(self.refresh, 'Cell-Modified')    # register to listen for Cell-Modified events, and bind to a view refresh 
+      self.refresh()
+    
+    def setCell(self, cell):
+      """ Point the VC to a (different) cell """
+      self.cell = cell
+      self.refresh()
+          
+    def mutateCell(self):
+      """ Provoke the underlying Cell to mutate """
+      self.cell.modify(True)
+      
+    def updateCell(self, **kwargs):
+      """ Change properties of the Cell """
+      self.cell.modify(False, **kwargs)
+
+    def refresh(self):
+      """ Update the display string associated with the underlying Cell state """
+      self.updateStr()
+    
+    def updateStr(self):
+      """ Overridden by subclasses """
+      self.strValue = self.cell.identity
+
+    def __str__(self):
+      """ Overridden by subclasses """
+      return self.strValue 
+
+
+
+class IntegerCell_VC(Cell_VC):
+    """ Simple viewer/controller specific for IntegerCell"""
+    
+    def updateStr(self):
+      """ Set the display string to the (integer) state """
+      self.strValue = str(self.cell.state)
+
+
+
+class BooleanCell_VC(Cell_VC):
+    """ Simple viewer/controller specific for BooleanCell"""
+          
+    def updateStr(self):
+      """ Set the display string depending on state of underlying cell """
+      self.strValue = '*' if self.cell.state else '-'
+
 
   
 if __name__ == '__main__':

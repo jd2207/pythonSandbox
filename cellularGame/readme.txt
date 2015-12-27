@@ -4,7 +4,6 @@ In progress
 
 Next-up
 ===========
-- cell.py to be split into cell.py and cellNet.py with the VC classes added to each respectively
 - add debug logging 
 - review all comments / usage and tests
 
