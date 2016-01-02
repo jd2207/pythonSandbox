@@ -81,6 +81,9 @@ class simpleCellTriangle(CellNet):
     self.cells[1].neighbors = [ self.cells[0], self.cells[2] ]
     self.cells[2].neighbors = [ self.cells[0], self.cells[1] ]
 
+  def __str__(self):
+    return str( [ self.cells[0].state, self.cells[1].state, self.cells[2].state ]  ) 
+
 
 
 class CellGrid(CellNet):
