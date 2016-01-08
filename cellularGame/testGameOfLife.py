@@ -1,8 +1,7 @@
 
 import time
-from gameOfLife import GameOfLifeGrid
-from CellNet import BooleanGrid_VC 
-
+from cell.gameOfLife import GameOfLifeGrid
+from cell.CellNet import BooleanGrid_VC 
 
 # Glider sequence 
 g = GameOfLifeGrid(6, 6)
