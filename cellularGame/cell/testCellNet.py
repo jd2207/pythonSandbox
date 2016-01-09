@@ -1,4 +1,4 @@
-import unittest, Cell, CellNet
+import unittest, cell, cellNet
 
 
 class TestCellNets(unittest.TestCase):
@@ -9,53 +9,53 @@ class TestCellNets(unittest.TestCase):
 
 
   def testCellNet(self):
-    cn = CellNet.CellNet()
+    cn = cellNet.CellNet()
     self.assertEqual(cn.cells, [])
     self.assertEqual(cn.generation, 0)
     self.assertEqual(cn.dump(), 'Gen 0:\n')
 
-    cn.cells = [ Cell.BooleanCell('Cell 1'), Cell.BooleanCell('Cell 2'), Cell.BooleanCell('Cell 3') ]
-    self.assertEqual( [cell.state for cell in cn.cells], [0, 0, 0])
+    cn.cells = [ cell.BooleanCell('Cell 1'), cell.BooleanCell('Cell 2'), cell.BooleanCell('Cell 3') ]
+    self.assertEqual( [c.state for c in cn.cells], [0, 0, 0])
     cn.tick()
     self.assertEqual(cn.generation, 1)
-    self.assertEqual( [cell.state for cell in cn.cells], [1, 1, 1])
+    self.assertEqual( [c.state for c in cn.cells], [1, 1, 1])
  
   def testCellTriangleIntegerCells(self):
-    cn = CellNet.simpleCellTriangle([ Cell.IntegerCell('Cell A', 1), 
-                                      Cell.IntegerCell('Cell B', 5), 
-                                      Cell.IntegerCell('Cell C', 7) ])
-    self.assertEqual( [cell.state for cell in cn.cells], [1, 5, 7])
+    cn = cellNet.simpleCellTriangle([ cell.IntegerCell('Cell A', 1), 
+                                      cell.IntegerCell('Cell B', 5), 
+                                      cell.IntegerCell('Cell C', 7) ])
+    self.assertEqual( [c.state for c in cn.cells], [1, 5, 7])
     self.assertEqual(cn.generation, 0)
     cn.tick()
     self.assertEqual(cn.generation, 1)
-    self.assertEqual( [cell.state for cell in cn.cells], [12, 8, 6])
+    self.assertEqual( [c.state for c in cn.cells], [12, 8, 6])
     cn.tick()
     self.assertEqual(cn.generation, 2)
-    self.assertEqual( [cell.state for cell in cn.cells], [14, 18, 20])
+    self.assertEqual( [c.state for c in cn.cells], [14, 18, 20])
 
 
 # ---------------------------------------------------------------------
 # Tests for CellGrid 
 # ---------------------------------------------------------------------
   def testCellGridSimple3x3(self):
-    cg = CellNet.CellGrid(3,3)
+    cg = cellNet.CellGrid(3,3)
     # need to test that each cell 
     #    - is a BaseCell
     #    - has correct Identity
     #    - has correct neighbors
     # and check dump state is unchanged after tick()
     
-    for r in range(cg.rows):
-      for c in range(cg.cols):
-        cell = cg.cells[r][c]
-        self.assertTrue( isinstance(cell, Cell.BaseCell))
-        self.assertEqual(str(cell.identity), '(%i, %i)' % (r,c))
+    for row in range(cg.rows):
+      for col in range(cg.cols):
+        c = cg.cells[row][col]
+        self.assertTrue( isinstance(c, cell.BaseCell))
+        self.assertEqual(str(c.identity), '(%i, %i)' % (row, col))
 
-        if r==0 and c==0:
-          self.assertEqual( cell.neighbors, [ cg.cells[0][1], cg.cells[1][1], cg.cells[1][0] ] )
+        if row==0 and col==0:
+          self.assertEqual( c.neighbors, [ cg.cells[0][1], cg.cells[1][1], cg.cells[1][0] ] )
         
-        if r==1 and c==1:
-          self.assertEqual( cell.neighbors, [ cg.cells[0][1], cg.cells[0][2], cg.cells[1][2],
+        if row==1 and col==1:
+          self.assertEqual( c.neighbors, [ cg.cells[0][1], cg.cells[0][2], cg.cells[1][2],
                                               cg.cells[2][2], cg.cells[2][1], cg.cells[2][0], 
                                               cg.cells[1][0], cg.cells[0][0] ] )
         # ... Need more of these ... 
@@ -75,9 +75,9 @@ class TestCellNets(unittest.TestCase):
   def testBooleanCellGrid_VC_General(self):
 
   # create the grid, set up the cells then link to the viewer/controller
-    bcg = CellNet.BooleanCellGrid(3,3)
+    bcg = cellNet.BooleanCellGrid(3,3)
     (bcg.cells[0][1].state, bcg.cells[1][1].state, bcg.cells[2][1].state) = (1,1,1)
-    vc = CellNet.BooleanGrid_VC(bcg)
+    vc = cellNet.BooleanGrid_VC(bcg)
 
   # test viewers cells align with the models cells
     self.checkViewerCellsMatchModelCells(vc, bcg)
@@ -127,15 +127,15 @@ class TestCellNets(unittest.TestCase):
   
 
     # default pattern
-    bcg = CellNet.BooleanCellGrid(5, 5)
-    vc = CellNet.BooleanGrid_VC(bcg)
+    bcg = cellNet.BooleanCellGrid(5, 5)
+    vc = cellNet.BooleanGrid_VC(bcg)
     self.assertEqual( str(vc), EMPTY_GRID_STRING)
     vc.play()
     self.assertEqual( str(vc), FULL_GRID_STRING)
   
     # setup a 'cross' pattern on a 3x3 grid, should be reflected in the py
-    bcg = CellNet.BooleanCellGrid(3,3)
-    vc = CellNet.BooleanGrid_VC(bcg)
+    bcg = cellNet.BooleanCellGrid(3,3)
+    vc = cellNet.BooleanGrid_VC(bcg)
     vc.mutateCell(0,1); vc.mutateCell(1,0); vc.mutateCell(1,1); vc.mutateCell(1,2); vc.mutateCell(2,1);
     self.assertEqual( str(vc), CROSS_PATTERN)
     # tick it twice should get back same pattern

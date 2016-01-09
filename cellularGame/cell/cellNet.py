@@ -1,6 +1,6 @@
 """ Module for CellNet classes """
 
-import Cell
+import cell
 from pubsub import pub
 
 
@@ -19,7 +19,7 @@ class CellNet(object):
      
   def makeCell(self, identity ):
     """ Make a cell for this class of CellNet - overridden by child classes""" 
-    return Cell.BaseCell( identity )
+    return cell.BaseCell( identity )
   
   def setupNeighbors(self):
     """ Create the links between Cell neighbors - overridden by child classes""" 
@@ -127,7 +127,7 @@ class BooleanCellGrid(CellGrid):
   """ Specialist CellGrid consisting of BooleanCells """
 
   def makeCell(self, rowColTupleIdentity ):
-    return Cell.BooleanCell( rowColTupleIdentity )
+    return cell.BooleanCell( rowColTupleIdentity )
 
   
 # ==================================================================================================
@@ -148,7 +148,7 @@ class CellGrid_VC(object):
     
   def setViewers(self):
     """ Overridden by subclasses - creates a list of CellViewerController objects for the grid"""
-    self.viewers = [ [ Cell.Cell_VC(cell) for cell in row ] for row in self.cellGrid.cells ]
+    self.viewers = [ [ cell.Cell_VC(c) for c in row ] for row in self.cellGrid.cells ]
     
   def mutateCell(self, row, col):
     cell = self.cellGrid.cells[row][col]
@@ -220,7 +220,7 @@ class BooleanGrid_VC(CellGrid_VC):
     
   def setViewers(self):
     """ Overridden by subclasses - creates a list of CellViewerController objects for the grid"""
-    self.viewers = [ [ Cell.BooleanCell_VC(cell) for cell in row ] for row in self.cellGrid.cells ]
+    self.viewers = [ [ cell.BooleanCell_VC(c) for c in row ] for row in self.cellGrid.cells ]
 
   
 if __name__ == '__main__':

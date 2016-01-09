@@ -1,5 +1,5 @@
-import unittest, Cell
-from Cell import Cell_VC
+import unittest, cell
+from cell import Cell_VC
 
 
 class TestCells(unittest.TestCase):
@@ -8,8 +8,8 @@ class TestCells(unittest.TestCase):
 # Tests for BaseCell 
 # ---------------------------------------------------------------------
   def setUp(self):
-    self.cell1 = Cell.BaseCell('Cell 1')
-    self.cell2 = Cell.BaseCell('Cell 2')
+    self.cell1 = cell.BaseCell('Cell 1')
+    self.cell2 = cell.BaseCell('Cell 2')
 
   def testBaseCellCreation(self):
     """ test constructor """  
@@ -22,7 +22,7 @@ class TestCells(unittest.TestCase):
 
   def testBaseCellAddNeighbors(self):
     """ test adding neighbors """  
-    cell3 = Cell.BaseCell('Cell 3')
+    cell3 = cell.BaseCell('Cell 3')
     [ cell3.addNeighbor(c) for c in (self.cell1, self.cell2) ]
     self.assertEqual(str(cell3), "Cell 3<0> A: None D: None N: ['Cell 1<0>', 'Cell 2<0>'] ")
 
@@ -58,10 +58,10 @@ class TestCells(unittest.TestCase):
 # ---------------------------------------------------------------------
   def testIntegerCell(self):
     """ tests specific to IntegerCell """
-    c1 = Cell.IntegerCell("Cell 1")         # default state
-    c2 = Cell.IntegerCell('Cell 2', 1)
-    c3 = Cell.IntegerCell('Cell 3', 5)
-    c4 = Cell.IntegerCell('Cell 4', 10)
+    c1 = cell.IntegerCell("Cell 1")         # default state
+    c2 = cell.IntegerCell('Cell 2', 1)
+    c3 = cell.IntegerCell('Cell 3', 5)
+    c4 = cell.IntegerCell('Cell 4', 10)
     
     self.assertEqual(c1.dump(), 'State: 0')
     self.assertEqual(c2.dump(), 'State: 1')
@@ -103,8 +103,8 @@ class TestCells(unittest.TestCase):
 # ---------------------------------------------------------------------
   def testBooleanCell(self):
     """ tests specific to BooleanCell """
-    c1 = Cell.BooleanCell("Cell 1")         # default False
-    c2 = Cell.BooleanCell('Cell 2', True)
+    c1 = cell.BooleanCell("Cell 1")         # default False
+    c2 = cell.BooleanCell('Cell 2', True)
     
     self.assertFalse(c1.state)
     self.assertEqual(c2.dump(), 'State: 1')
@@ -123,7 +123,7 @@ class TestCells(unittest.TestCase):
     """ general tests for Cell Viewer/Controllers """
 
 # create a BaseCell and a Viewer/Controller
-    c1 = Cell.BaseCell('Cell 1')
+    c1 = cell.BaseCell('Cell 1')
     vc = Cell_VC(c1)
     
 # check association and initial value of the viewer/controller string
@@ -131,7 +131,7 @@ class TestCells(unittest.TestCase):
     self.assertEqual( str(vc), 'Cell 1')
 
 # test setCell 
-    c2 = Cell.BaseCell('Cell 2')
+    c2 = cell.BaseCell('Cell 2')
     vc.setCell(c2)
     self.assertTrue( vc.cell is c2)
     self.assertEqual( str(vc), 'Cell 2')
@@ -143,15 +143,15 @@ class TestCells(unittest.TestCase):
     """ tests specific to Integer Cell VC """
 
 # create an IntegerCell and a Viewer/Controller
-    c1 = Cell.IntegerCell('Cell1')
-    vc = Cell.IntegerCell_VC(c1)
+    c1 = cell.IntegerCell('Cell1')
+    vc = cell.IntegerCell_VC(c1)
     
 # check association and initial value of the viewer/controller string
     self.assertEqual( str(vc), '0')
 
 # set up neighbors of c1
-    c2 = Cell.IntegerCell('Cell2', state=5)
-    c3 = Cell.IntegerCell('Cell3', state=10)
+    c2 = cell.IntegerCell('Cell2', state=5)
+    c3 = cell.IntegerCell('Cell3', state=10)
     c1.addNeighbor(c2)
     c1.addNeighbor(c3)
     
@@ -169,8 +169,8 @@ class TestCells(unittest.TestCase):
     """ tests specific to Boolean Cell VC """
 
 # create a boolean cell and a viewer/controller
-    c1 = Cell.BooleanCell('Cell1')
-    vc = Cell.BooleanCell_VC(c1)
+    c1 = cell.BooleanCell('Cell1')
+    vc = cell.BooleanCell_VC(c1)
 
 # check association and initial value of the viewer/controller string
     self.assertEqual( str(vc),'-')
