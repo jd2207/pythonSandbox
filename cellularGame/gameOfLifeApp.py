@@ -1,12 +1,12 @@
 import wx 
-import Cell, CellNet
-import gameOfLife
+import cell.Cell, cell.CellNet
+import cell.gameOfLife
 
 
-class GameFrame(wx.Frame, CellNet.BooleanGrid_VC):
+class GameFrame(wx.Frame, cell.CellNet.BooleanGrid_VC):
   def __init__(self, parent, title, cellGrid):
     wx.Frame.__init__(self, parent, title=title, size=(500, 500))
-    CellNet.BooleanGrid_VC.__init__(self, cellGrid)
+    cell.CellNet.BooleanGrid_VC.__init__(self, cellGrid)
             
     self.setTickTime()          
             
@@ -62,10 +62,10 @@ class GameFrame(wx.Frame, CellNet.BooleanGrid_VC):
   
         
 
-class BooleanCellPanel(wx.Panel, Cell.BooleanCell_VC):
-  def __init__(self, parent, cell):
+class BooleanCellPanel(wx.Panel, cell.Cell.BooleanCell_VC):
+  def __init__(self, parent, c):
     wx.Panel.__init__(self, parent)
-    Cell.BooleanCell_VC.__init__(self, cell)
+    cell.Cell.BooleanCell_VC.__init__(self, c)
     self.Bind(wx.EVT_LEFT_UP, self.toggleCell)
           
   def toggleCell(self, e):
@@ -74,7 +74,7 @@ class BooleanCellPanel(wx.Panel, Cell.BooleanCell_VC):
   def refresh(self):   
     clr = wx.Colour(0,0,0) if self.cell.state else wx.Colour(255,255,255)  
     self.SetBackgroundColour( clr )
-    Cell.BooleanCell_VC.refresh(self)
+    cell.Cell.BooleanCell_VC.refresh(self)
     wx.Panel.Refresh(self) 
 
       
@@ -82,7 +82,7 @@ class BooleanCellPanel(wx.Panel, Cell.BooleanCell_VC):
 class GameOfLifeApp(wx.App):
   
   def OnInit(self):
-    model = gameOfLife.GameOfLifeGrid(10,10)
+    model = cell.gameOfLife.GameOfLifeGrid(10,10)
     self.frame = GameFrame(parent=None, title="Interactive Game of Life", cellGrid=model)
     self.frame.Show()
     self.SetTopWindow(self.frame)
