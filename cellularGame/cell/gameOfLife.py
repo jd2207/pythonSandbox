@@ -1,7 +1,7 @@
-import Cell, CellNet
+import cell, cellNet
 
 
-class GameOfLifeCell(Cell.BooleanCell):
+class GameOfLifeCell(cell.BooleanCell):
   """ Behaves as per Conway's Game of Life """
   
   def mutate(self, state=None):
@@ -15,7 +15,7 @@ class GameOfLifeCell(Cell.BooleanCell):
         self.state = True                   #      cell comes alive, as by reproduction
 
 
-class GameOfLifeGrid(CellNet.BooleanCellGrid):
+class GameOfLifeGrid(cellNet.BooleanCellGrid):
   def makeCell(self, rowColTupleIdentity ):
     return GameOfLifeCell( rowColTupleIdentity )
       

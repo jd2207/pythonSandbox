@@ -1,8 +1,6 @@
 """ Module for Cell classes and associated simple viewer/controllers """
 
 import copy
-from pubsub import pub
-
 
 class BaseCell(object):
   """ Parent class of all Cell classes 
@@ -46,15 +44,6 @@ class BaseCell(object):
     """ Append a new cell to the list of neighbors of this cell """
     self.neighbors.append(cell)
     
-  def modify(self, mutate=False, **kwargs):
-    """ Change state/properties of the Cell """
-    if mutate: 
-      self.mutate()                     # change according to specific rules of subclasses
-    else:
-      self.update(**kwargs)             # change by overridden update() and **kwargs
-      
-    pub.sendMessage('Cell-Modified')
-    
   def mutate(self):
     """ Overridden by descendants - rules for cell self-modification"""
     pass
@@ -83,6 +72,9 @@ class BaseCell(object):
     return '%s<%i>' % (str(self.identity), self.generation)
 
   def __str__ (self):
+    return self.identityString()
+  
+  def dump(self):
     s = self.identityString()\
         + ' A: ' + ( self.ancestor.identityString() if self.ancestor else 'None' ) \
         + ' D: ' + ( self.descendant.identityString() if self.descendant else 'None' )
@@ -91,12 +83,7 @@ class BaseCell(object):
       s += str( [ cell.identityString() for cell in self.neighbors ] )
     else:
       s += 'None'
-    return s + ' ' + self.dump()
-  
-  def dump(self):
-    """ Overridden by descendants - used to return a string of instance attribute values"""
-    return ''
-
+    return s
 
 
 class IntegerCell(BaseCell):
@@ -126,9 +113,12 @@ Usage:
     """ sets the Cell state """
     self.state = state
 
+  def __str__(self):
+    return str(self.state)
+    
   def dump(self):
     """ print out current state """
-    return 'State: %i' % self.state
+    return super(IntegerCell, self).dump() + 'State: %i'+str(self)
 
 
 
@@ -157,7 +147,7 @@ Usage:
 # -----------------------------------------------------------------
 # Cell Viewer / Controllers
 # -----------------------------------------------------------------
-
+from pubsub import pub
 class Cell_VC(object):
     """ Simple Viewer/Controller of Cell """
     def __init__(self, cell):
@@ -171,20 +161,18 @@ class Cell_VC(object):
       self.cell = cell
       self.refresh()
           
-    def mutateCell(self):
+    def mutate(self):
       """ Provoke the underlying Cell to mutate """
-      self.cell.modify(True)
-      
-    def updateCell(self, **kwargs):
+      self.cell.mutate()
+      pub.sendMessage('Cell-Modified')
+#     
+    def update(self, **kwargs):
       """ Change properties of the Cell """
-      self.cell.modify(False, **kwargs)
-
+      self.cell.update(**kwargs)
+      pub.sendMessage('Cell-Modified')
+# 
     def refresh(self):
       """ Update the display string associated with the underlying Cell state """
-      self.updateStr()
-    
-    def updateStr(self):
-      """ Overridden by subclasses """
       self.strValue = self.cell.identity
 
     def __str__(self):
@@ -195,8 +183,7 @@ class Cell_VC(object):
 
 class IntegerCell_VC(Cell_VC):
     """ Simple viewer/controller specific for IntegerCell"""
-    
-    def updateStr(self):
+    def refresh(self):
       """ Set the display string to the (integer) state """
       self.strValue = str(self.cell.state)
 
@@ -204,8 +191,7 @@ class IntegerCell_VC(Cell_VC):
 
 class BooleanCell_VC(Cell_VC):
     """ Simple viewer/controller specific for BooleanCell"""
-          
-    def updateStr(self):
+    def refresh(self):
       """ Set the display string depending on state of underlying cell """
       self.strValue = '*' if self.cell.state else '-'
 
