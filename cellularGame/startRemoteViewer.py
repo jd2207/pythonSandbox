@@ -1,7 +1,7 @@
-#import remoteModel
-#if __name__ == "__main__":
-#  remoteModel.ExampleRemoteModelViewer('remoteServer')
-
-import remoteTicker
+import pyroMVC.remoteModel
 if __name__ == "__main__":
-  remoteTicker.RemoteTickerViewer('remoteServer')
+  pyroMVC.remoteModel.ExampleRemoteModelViewer('remoteServer')
+
+#import pyroMVC.remoteTicker
+#if __name__ == "__main__":
+#  pyroMVC.remoteTicker.RemoteTickerViewer('remoteServer')

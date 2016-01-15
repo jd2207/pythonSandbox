@@ -94,15 +94,16 @@ class TestCellNets(unittest.TestCase):
         
     # Use ticker.Tickable interface to do one tick()
     import time
-    cnvc.play(1)
-    time.sleep(cnvc.period + 1)      # 1 second more than tick() i.e. only 1 tick()
-    self.assertEqual(str(cnvc), '\n0: 38\n1: 34\n2: 32')
+    cnvc.play()
+    time.sleep(cnvc.period + 0.5)      # 0.5 second more than tick = 2 ticks 
+    cnvc.pause()
+    self.assertEqual(str(cnvc), '\n0: 66\n1: 70\n2: 72')
 
     # Use mutate() and update() to change specific cells 
     cnvc.mutateCell(0)
-    self.assertEqual(str(cnvc), '\n0: 66\n1: 34\n2: 32')
+    self.assertEqual(str(cnvc), '\n0: 142\n1: 70\n2: 72')
     cnvc.updateCell(1, 10)
-    self.assertEqual(str(cnvc), '\n0: 66\n1: 10\n2: 32')
+    self.assertEqual(str(cnvc), '\n0: 142\n1: 10\n2: 72')
 
   def testCellGrid_VC(self):
     """ Specific tests for BooleanGrid_VC """
@@ -132,12 +133,13 @@ class TestCellNets(unittest.TestCase):
     vc.refreshOnTock()
     self.assertEqual( str(vc), CROSS_PATTERN)
    
-  # perform two ticks using play() - printed vc should still be the same as before
+    # Use ticker.Tickable interface to do one tick()
     import time
-    vc.play(2)
-    time.sleep(vc.period + 1)    # 1 second more than the second tick() i.e. two ticks()
+    vc.play()
+    time.sleep(vc.period + 0.5)      # 0.5 second more than tick = 2 ticks 
+    vc.pause()
     self.assertEqual( str(vc), CROSS_PATTERN)
-  
+
   '''
   def checkViewerCellsMatchModelCells(self, viewer, model):
     """ test that the cells pointed to by all the viewers match the correct cells from the underlying grid """

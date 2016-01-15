@@ -20,21 +20,27 @@ pyro4-ns
 
 2. Edit and run startRemoteServer.py
 
-3. Edit and run startRemoteViewer.py 
+3. Edit and run startRemoteViewer.py (or indeed multiple viewer consoles)
 => Observe that the server console confirms that a new viewer is added
 
 4. Open an interactive python console (acting as a Controller)
 
-Example where remoteServer is ExampleRemoteModelServer and remoteViewer is ExampleRemoteModelViewer   
+Example 1. remoteServer is ExampleRemoteModelServer and remoteViewer is ExampleRemoteModelViewer   
 >>> import Pyro4
 >>> rm = Pyro4.Proxy("PYRONAME:remoteServer")
 >>> rm.query()
 {u'name': u'xxx', u'value': 0}
 >>> rm.doModify( { 'name' : 'newname', 'value' : 99} )
-On viewer console now see:
+On viewer console(s) now see:
 	Received a refresh notification from the server
-	Model values now: {u'name': u'blah', u'value': -5}
+	Model values now: {u'name': u'newname', u'value': 99}
 
+
+Example 2. remoteServer is RemoteTickerServer and remoteViewer is RemoteTickerViewer   
+Follow steps 1-3 above then..
+
+
+< T B D >
 
 To Do
 ======

@@ -9,39 +9,32 @@ class Tickable(object):
     self.playing = False
     self.setPeriod(1)         # default period = 1 second
     self.tickTimer = None
-    self.lastTick = 0  
     
   def setPeriod(self, period):
     self.period = period
     
-  def tickSeq(self):
-    """ performs the timer controlled tick sequence at least but possibly many times depending on self.lastTick """
-
-    print 'starting the tick, lastTick: %i, tickNo: %i' % (self.lastTick, self.tickNo)
-
+  def tick(self):
+    """ performs the timer controlled tick sequence at least but possibly many times depending on self.playing """
     self.tickNo += 1
     self.doTick()
-    print 'tick performed'
+    print 'tick-tock'
     pub.sendMessage('Tock')
-    if self.tickNo < self.lastTick:
-      self.tickTimer = threading.Timer(self.period, Tickable.tickSeq, [self] )    # restart the timer
-      print 'starting the timer, lastTick: %i, tickNo: %i' % (self.lastTick, self.tickNo)
+    if self.playing:
+      self.tickTimer = threading.Timer(self.period, Tickable.tick, [self] )    # restart the timer
+      print 'started the timer'
       self.tickTimer.start()
-    else:
-      print 'reached last tick'
-      self.playing = False
+      
 
   def doTick(self):
     """ Overridden by subclasses which implement tickable interface """
     pass
   
-  def play(self, ticksPerPlay=1):
+  def play(self):
     """ start timer controlled tick()s of any class implementing ticker.Tickable() """
     if not self.playing: 
       print 'Start playing...'
       self.playing = True
-      self.lastTick = self.tickNo + ticksPerPlay 
-      self.tickSeq()      # perform tick sequence (in another thread !!)
+      self.tick()      # start tick sequence (in another thread !!)
     else:
       print 'Already playing'
     
@@ -54,6 +47,12 @@ class Tickable(object):
       self.tickTimer = None
     else:
       print 'Already paused'
+
+  def toDict(self):
+    return { 'period' : self.period,
+             'playing?' : self.playing, 
+             'tickNo' : self.tickNo,
+           }
 
 
 
@@ -68,14 +67,14 @@ class SimpleTicker(Tickable):
     self.value = newValue
     print 'Value is set to', self.value
 
-  def doTick(self):
+  def getValue(self):
+    return self.value
+
+def doTick(self):
     self.value += 1
     print 'Value is incremented to', self.value
 
-  def __str__(self):
-    return str({ 'value' : self.value, 'playing?' : self.playing, 'tickNo' : self.tickNo, 'period' : self.period })
 
-  
 
 if __name__=="__main__":
   print "See testTicker for tests"
