@@ -1,12 +1,8 @@
-import unittest, cell, cellNet
-from pubsub import pub
+import unittest, cell, cellNet, time
 
 class TestCellNets(unittest.TestCase):
   """ Tests for CellNet objects """
 
-  def tearDown(self):
-    pub.unsubAll()          # ensure no pubsub subscriptions hanging over between tests
-  
   def testCellNet(self):
     """ Constructor tests for parent CellNet """
     cn = cellNet.CellNet()
@@ -19,23 +15,34 @@ class TestCellNets(unittest.TestCase):
     cn.nextGen()
     self.assertEqual(cn.generation, 1)
     self.assertEqual( [c.state for c in cn.cells], [1, 1, 1])
- 
+
+    cn.play()
+    time.sleep(1.5)
+    cn.cells[1].update()
+    time.sleep(1)
+    cn.pause()
+    self.assertEqual( [c.state for c in cn.cells], [False, True, False])
+    self.assertEqual(cn.generation, 4)
+  
   def testCellTriangleIntegerCells(self):
     """ Test for a SimpleCellTriangle object """
     cn = cellNet.SimpleCellTriangle([ cell.IntegerCell('Cell A', 1), 
                                       cell.IntegerCell('Cell B', 5), 
                                       cell.IntegerCell('Cell C', 7) ])
     self.assertEqual( [c.state for c in cn.cells], [1, 5, 7])
-    self.assertEqual(cn.generation, 0)
-    cn.nextGen()
-    self.assertEqual(cn.generation, 1)
+    cn.play()
+    cn.pause()
     self.assertEqual( [c.state for c in cn.cells], [12, 8, 6])
-    cn.nextGen()
-    self.assertEqual(cn.generation, 2)
-    self.assertEqual( [c.state for c in cn.cells], [14, 18, 20])
+
+    cn.play()
+    time.sleep(1.5)
+    cn.cells[1].update(10)
+    time.sleep(1)
+    cn.pause()
+    self.assertEqual( [c.state for c in cn.cells], [42, 70, 48])
 
   def testCellGrid3x3(self):
-    """ Tests for a simple 3 x 3 Grid """ 
+    """ Tests for a simple 3 x 3 Grid esp setupNeighbors() """ 
     cg = cellNet.CellGrid(3,3)
     # need to test that each cell 
     #    - is a BaseCell
@@ -73,83 +80,16 @@ class TestCellNets(unittest.TestCase):
     self.assertEqual(str(bcg), "\n['True', 'True', 'True']\n['False', 'False', 'False']\n['True', 'True', 'True']\n")
 
 
-# ---------------------------------------------------------------------
-# Tests for CellNet Viewer-Controller objects
-# ---------------------------------------------------------------------
-  def testCellNet_VC(self):
-    """ General Tests """
-    cn = cellNet.SimpleCellTriangle([ cell.IntegerCell('Cell A', 1), 
-                                      cell.IntegerCell('Cell B', 5), 
-                                      cell.IntegerCell('Cell C', 7) ])
-    cnvc = cellNet.CellNet_VC(cn)
-    self.assertEqual(str(cnvc), '\n0: 1\n1: 5\n2: 7')
-
-    # Use doTick() method to one tick(), independent of ticker.Tickable interface
-    cnvc.doTick()
-    cnvc.refreshOnTock()
-    self.assertEqual(str(cnvc), '\n0: 12\n1: 8\n2: 6')
-    cnvc.doTick()
-    cnvc.refreshOnTock()
-    self.assertEqual(str(cnvc), '\n0: 14\n1: 18\n2: 20')
-        
-    # Use ticker.Tickable interface to do one tick()
-    import time
-    cnvc.play()
-    time.sleep(cnvc.period + 0.5)      # 0.5 second more than tick = 2 ticks 
-    cnvc.pause()
-    self.assertEqual(str(cnvc), '\n0: 66\n1: 70\n2: 72')
-
-    # Use mutate() and update() to change specific cells 
-    cnvc.mutateCell(0)
-    self.assertEqual(str(cnvc), '\n0: 142\n1: 70\n2: 72')
-    cnvc.updateCell(1, 10)
-    self.assertEqual(str(cnvc), '\n0: 142\n1: 10\n2: 72')
-
-  def testCellGrid_VC(self):
-    """ Specific tests for BooleanGrid_VC """
-    CROSS_PATTERN = \
-        '------------' + '\n'\
-      + '    0  1  2 ' + '\n'\
-      + ' 0  -  *  - ' + '\n'\
-      + ' 1  *  *  * ' + '\n'\
-      + ' 2  -  *  - ' + '\n'\
-      + '------------'
-
-  # create the grid, set up the cells then link to the viewer/controller
-    bcg = cellNet.BooleanCellGrid(3,3)
-    (bcg.cells[0][1].state, bcg.cells[1][1].state, bcg.cells[2][1].state) = (1,1,1)
-    vc = cellNet.CellGrid_VC(bcg)
-    self.assertEqual(str(vc), '------------\n    0  1  2 \n 0  -  *  - \n 1  -  *  - \n 2  -  *  - \n------------')
-    
-  # test that underlying cell can be manipulated via the controller and the change reflected in the associated cellNet
-    vc.mutateCell(1, 0)
-    vc.updateCell(1, 2)
-    self.assertEqual( str(vc), CROSS_PATTERN)
-  
-  # perform two ticks without separate thread - should still be the same as before
-    vc.doTick()
-    vc.refreshOnTock()
-    vc.doTick()
-    vc.refreshOnTock()
-    self.assertEqual( str(vc), CROSS_PATTERN)
-   
-    # Use ticker.Tickable interface to do one tick()
-    import time
-    vc.play()
-    time.sleep(vc.period + 0.5)      # 0.5 second more than tick = 2 ticks 
-    vc.pause()
-    self.assertEqual( str(vc), CROSS_PATTERN)
-
-  '''
+'''
   def checkViewerCellsMatchModelCells(self, viewer, model):
     """ test that the cells pointed to by all the viewers match the correct cells from the underlying grid """
     for i in range( len(model.cells) ):
       for j in range ( len( model.cells[i] )):
         self.assertTrue( viewer.viewers[i][j].cell is model.cells[i][j], 'Cell (%i, %i)' % (i,j))  
 
-  '''
+'''
 
-  
+
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestCellNets)
   unittest.TextTestRunner(verbosity=3).run(suite)

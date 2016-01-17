@@ -39,8 +39,48 @@ On viewer console(s) now see:
 Example 2. remoteServer is RemoteTickerServer and remoteViewer is RemoteTickerViewer   
 Follow steps 1-3 above then..
 
+>>> import Pyro4
+>>> rm = Pyro4.Proxy("PYRONAME:remoteServer")
+>>> rm.query()
+{u'tickNo': 0, u'playing?': False, u'period': 1}
+>>> rm.play()
+<some seconds go by ...>
+>>> rm.query()
+{u'tickNo': 10, u'playing?': True, u'period': 1}
+<some seconds go by ...>
+>>> rm.pause()
+>>> rm.query()
+{u'tickNo': 16, u'playing?': False, u'period': 1}
+On viwer console see: 
+Received a refresh notification from the server
+State of ticker {u'tickNo': 1, u'playing?': True, u'period': 1}
+Received a refresh notification from the server
+State of ticker {u'tickNo': 2, u'playing?': True, u'period': 1}
+Received a refresh notification from the server
+State of ticker {u'tickNo': 3, u'playing?': True, u'period': 1}
+...
+Received a refresh notification from the server
+State of ticker {u'tickNo': 16, u'playing?': True, u'period': 1}
 
-< T B D >
+Example 3. remoteServer is SimpleRemoteTickerServer and remoteViewer is SimpleRemoteTickerViewer   
+Follow steps 1-3 above then..
+
+>>> import Pyro4
+>>> rm = Pyro4.Proxy("PYRONAME:remoteServer")
+>>> rm.query()
+({u'tickNo': 0, u'playing?': False, u'period': 1}, u'Value:', 0)
+>>> rm.play()
+>>> rm.pause()
+On viewer console see:
+Received a refresh notification from the server
+Model values now: ({u'tickNo': 1, u'playing?': True, u'period': 1}, u'Value:', 1)
+Received a refresh notification from the server
+Model values now: ({u'tickNo': 2, u'playing?': True, u'period': 1}, u'Value:', 2)
+Received a refresh notification from the server
+Model values now: ({u'tickNo': 3, u'playing?': True, u'period': 1}, u'Value:', 3)
+... 
+
+
 
 To Do
 ======

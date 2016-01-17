@@ -22,8 +22,7 @@ class Tickable(object):
     if self.playing:
       self.tickTimer = threading.Timer(self.period, Tickable.tick, [self] )    # restart the timer
       print 'started the timer'
-      self.tickTimer.start()
-      
+      self.tickTimer.start()  
 
   def doTick(self):
     """ Overridden by subclasses which implement tickable interface """
@@ -70,7 +69,7 @@ class SimpleTicker(Tickable):
   def getValue(self):
     return self.value
 
-def doTick(self):
+  def doTick(self):
     self.value += 1
     print 'Value is incremented to', self.value
 

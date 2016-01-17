@@ -30,7 +30,7 @@ vc.updateCell(0,1); vc.updateCell(1,2);  vc.updateCell(2,0);  vc.updateCell(2,1)
 print vc 
 
 vc.play()
-time.sleep(vc.period * 3 * 1.1)     # wait a bit more than 3 periods = 4 generations 
+time.sleep(vc.cellNet.period * 3 * 1.1)     # wait a bit more than 3 periods = 4 generations 
 vc.pause()
 print vc 
 

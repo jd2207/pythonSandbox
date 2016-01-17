@@ -1,7 +1,7 @@
 """ Module for CellNet classes """
 import cell, ticker
 
-class CellNet(object):
+class CellNet(ticker.Tickable):
   """ An abstract collection of Cells 
       The collection of Cells may be ticked() - i.e. modified en-masse according to the re-generation rules of each cell
       to form a next generation  
@@ -13,6 +13,8 @@ class CellNet(object):
     self.cells = getattr(self, 'cells', [])  # set self.cells to [] if not defined by the subclass __init__() 
     self.generation = 0 
     self.setupNeighbors()
+    ticker.Tickable.__init__(self)
+         
          
   def makeCell(self, identity ):
     """ Make a cell for this class of CellNet - overridden by child classes""" 
@@ -30,6 +32,9 @@ class CellNet(object):
     """ convert a list of Cells to create a new CellNet of this class -  overridden by child classes""" 
     return cells
   
+  def doTick(self):
+    self.nextGen()
+
   def nextGen(self):
     """ regenerate the Cells of the entire grid and update viewers """                             
     self.generation += 1
@@ -40,7 +45,7 @@ class CellNet(object):
       cell.neighbors = [ n.descendant for n in cell.neighbors ]
     
     self.cells = self.fromList(newList)               # Convert it back to a grid and overwrite the original list
-  
+    
   def dump(self):
     cellList = self.toList()
     return 'Gen %i:\n' % self.generation + \
@@ -129,35 +134,26 @@ class BooleanCellGrid(CellGrid):
       s+= str ([ str(self.cells[row][col]) for col in range(self.cols) ])+'\n'
     return s
 
-  
+
 # ==================================================================================================
 # CellNet Viewer-Controllers 
 # ==================================================================================================
 
 from pubsub import pub  
-class CellNet_VC(ticker.Tickable):
+class CellNet_VC(object):
   """ Generic viewer/controller for CellNet objects """
   
   def __init__ (self, cellNet):
     self.cellNet = cellNet
     self.setViewers()
-    pub.subscribe(self.refreshOnTock, 'Tock')  # register to listen for tick() events, and bind to refreshOnTick() 
-    super(CellNet_VC, self).__init__()
+    pub.subscribe(self.refreshOnTock, 'Tock')
   
-  def doTick(self):
-    """ perform a tick() of the underlying CellNet """
-    self.cellNet.nextGen()
- 
   def setViewers(self):
     self.cellViewers = [ self.setCellVC(c) for c in self.cellNet.toList() ]
 
   def setCellVC(self, c):
     return cell.IntegerCell_VC(c)
     
-  def refreshOnTock(self):
-    """ response to a tick() of the underlying CellNet object """
-    [ v.setCell(v.cell.descendant) for v in self.cellViewers ]
-      
   def __str__(self):
     """ Display a textual view of the underlying Cellnet"""
     i = 0; s = ''
@@ -173,9 +169,19 @@ class CellNet_VC(ticker.Tickable):
   def updateCell(self, index, newValue=0):
     """ Usually overridden by subclasses. Otherwise, assumes self.cellNet.cells is a 1D list """
     self.cellViewers[index].update(state=newValue)
-    
-    
-    
+
+  def refreshOnTock(self):
+    """ response to a tick() of the underlying CellNet object """
+    [ v.setCell(v.cell.descendant) for v in self.cellViewers ]
+
+  def play(self):
+    self.cellNet.play()
+  
+  def pause(self):
+    self.cellNet.pause()
+
+
+
 class CellGrid_VC(CellNet_VC):
   """ Generic viewer/controller for CellGrid objects 
 
@@ -219,39 +225,16 @@ class CellGrid_VC(CellNet_VC):
     s += '---' * (cols + 1)
     return s
 
-'''
+
+
 class BooleanGrid_VC(CellGrid_VC):
-  """ Generic viewer/controller for BooleanCellGrid objects 
-  
-  Usage: 
-  >>> import Cell, CellViewerController
-  >>> g = Cell.BooleanCellGrid(3,3)
-  >>> vc = CellViewerController.BooleanGridViewerController(g)
-  >>> vc.modifyCell(0,1,state=1)
-  >>> vc.modifyCell(1,1,state=1)
-  >>> vc.modifyCell(2,1,state=1)
-  
-  >>> print vc
-------------
-    0  1  2
- 0  -  *  -
- 1  -  *  -
- 2  -  *  -
-------------
-  >>> vc.tick()
-  >>> print vc
-------------
-    0  1  2
- 0  *  -  *
- 1  *  -  *
- 2  *  -  *
-------------
-  """
+  """ Generic viewer/controller for BooleanCellGrid objects """
     
   def setViewers(self):
     """ Overridden by subclasses - creates a list of CellViewerController objects for the grid"""
     self.cellViewers = [ [ cell.BooleanCell_VC(c) for c in row ] for row in self.cellGrid.cells ]
-'''
+
+
   
 if __name__ == '__main__':
   print "For tests use module 'testCellNet'"

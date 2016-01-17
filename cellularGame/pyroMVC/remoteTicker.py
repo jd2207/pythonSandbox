@@ -38,7 +38,7 @@ class SimpleRemoteTickerServer(RemoteTickerServer):
     return cell.ticker.SimpleTicker()
 
   def query(self):
-    return super(SimpleRemoteTickerServer, self).toDict(), 'Value:', self.model.getValue()
+    return super(SimpleRemoteTickerServer, self).query(), 'Value:', self.model.getValue()
 
 
 
