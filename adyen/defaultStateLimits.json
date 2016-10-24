@@ -1,0 +1,42 @@
+[
+        {
+            "AccountStateConfiguration": {
+                "allowPayout": "false", 
+                "allowProcessing": "true", 
+                "derived": "true", 
+                "stateType": "LimitlessProcessing"
+            }
+        }, 
+        {
+            "AccountStateConfiguration": {
+                "allowPayout": "true", 
+                "allowProcessing": "false", 
+                "derived": "true", 
+                "stateType": "LimitlessPayout"
+            }
+        }, 
+        {
+            "AccountStateConfiguration": {
+                "allowPayout": "true", 
+                "allowProcessing": "false", 
+                "derived": "true", 
+                "stateLimit": {
+                    "amount": 100000, 
+                    "currency": "EUR"
+                }, 
+                "stateType": "LimitedPayout"
+            }
+        }, 
+        {
+            "AccountStateConfiguration": {
+                "allowPayout": "false", 
+                "allowProcessing": "true", 
+                "derived": "true", 
+                "stateLimit": {
+                    "amount": 1000000, 
+                    "currency": "EUR"
+                }, 
+                "stateType": "LimitedProcessing"
+            }
+        }
+ ]
