@@ -1,66 +1,59 @@
-from endPoint import endPoint
+import endPoint
 import unittest, testUtils
 
 class TestEndPoint(unittest.TestCase):
 
   def setUp(self):
-    credentials = ('ws_586199@Company.AdyenTechSupport', 'Q*-h6a?8Ut!qU<Q(F2y1br{MM')
-    self.endPoint = endPoint.AuthorizePaymentEndPoint(credentials)
-    self.testCard = testUtils.TEST_CARD_VISA
-    self.testMerchantAccount = "JohnDick"
+    self.setCredentials()
+    self.setEndPoint(self.credentials)
+ 
+  def setCredentials(self):
+    ''' To be overridden by child classes '''
 
-  def testRequest(self):
-    self.request = self.createRequest()
-    self.sendRequest(self.request)
-    self.validateHttpResponse()
-    self.validateJsonResponse()
-    
+  def setEndPoint(self, credentials):
+    ''' To be overridden by child classes '''
+
+  def createRequest(self):
+    ''' To be overridden by child classes '''
+         
   def sendRequest(self):
-    self.responsecode = self.endPoint.sendRequest(self.request)
-   
-  def validateHttpResp(self):
-    
-       
-    merchantRef = testUtils.timestampMerchantRef()
-    amount = testUtils.TEST_EUR_AMOUNT
-    paymentReq = testUtils.CardPayment (amount, merchantRef, self.testMerchantAccount, self.testCard).payment
+    self.endPoint.sendRequest(self.request)
+      
+  def validateHttpResponse(self):
+    self.assertEqual(self.endPoint.httpResp, 200)  #     'Is HTTP response code = 200'
 
-    # send the request
-    r = self.endPoint.sendRequest(paymentReq)
+  def validateJsonResponse(self): 
+    ''' To be overridden by child classes '''
   
-    # test the HTTP response
-    self.assertEqual(r, 200)  #     'Is HTTP response code = 200')
-    
-    # validate the response
-    paymentResp = self.endPoint.getResponse()
-    self.assertEqual(paymentResp["resultCode"], 'Authorised')  #  "Is payment authorized?"
-'''
-'''
+  def test_Request(self):
+    self.createRequest()
+    self.sendRequest()
+    self.validateHttpResponse()
+    self.validateJsonResponse() 
+
     
 class TestBasicAuthorization(TestEndPoint):
+ 
+    def setCredentials(self):
+      self.credentials = ('ws_586199@Company.AdyenTechSupport', 'Q*-h6a?8Ut!qU<Q(F2y1br{MM')
     
-    def createRequest():
+    def setEndPoint(self, credentials):
+      self.endPoint = endPoint.AuthorizePaymentEndPoint(credentials, debug=True)
+    
+    def createRequest(self):
+      testMerchantAccount = "JohnDick"
+      testCard = testUtils.TEST_CARD_VISA
       merchantRef = testUtils.timestampMerchantRef()
       amount = testUtils.TEST_EUR_AMOUNT
-      paymentReq = testUtils.CardPayment (amount, merchantRef, self.testMerchantAccount, self.testCard).payment
-      
-    def sendRequest(self):
-      self.responsecode = self.endPoint.sendRequest(paymentReq)
-      
-  
-    # test the HTTP response
-    self.assertEqual(r, 200)  #     'Is HTTP response code = 200')
+      self.request = testUtils.CardPayment (amount, merchantRef, testMerchantAccount, testCard).payment
     
-    # validate the response
-    paymentResp = self.endPoint.getResponse()
-    self.assertEqual(paymentResp["resultCode"], 'Authorised')  #  "Is payment authorized?"
-    
-    
-'''
+    def validateJsonResponse(self):
+      resp = self.endPoint.getResponse()
+      self.assertEqual(resp["resultCode"], 'Authorised')  #  "Is payment authorized?"
 
-class TestAuthorization(TestEndPoint):
   
 
 if __name__ == '__main__':
-  suite = unittest.TestLoader().loadTestsFromTestCase(TestEndPoints)
+    
+  suite = unittest.TestLoader().loadTestsFromTestCase(TestBasicAuthorization)
   unittest.TextTestRunner(verbosity=3).run(suite)
