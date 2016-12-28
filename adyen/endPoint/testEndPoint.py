@@ -1,5 +1,5 @@
 import endPoint
-import unittest, testUtils
+import unittest, utils.testUtils
 
 class TestEndPoint(unittest.TestCase):
 
@@ -35,17 +35,17 @@ class TestEndPoint(unittest.TestCase):
 class TestBasicAuthorization(TestEndPoint):
  
     def setCredentials(self):
-      self.credentials = ('ws_586199@Company.AdyenTechSupport', 'Q*-h6a?8Ut!qU<Q(F2y1br{MM')
+      self.credentials = utils.testUtils.TEST_CRED_PAYMENT
     
     def setEndPoint(self, credentials):
-      self.endPoint = endPoint.AuthorizePaymentEndPoint(credentials, debug=True)
+      self.endPoint = endPoint.AuthorizePaymentEndPoint(credentials)
     
     def createRequest(self):
       testMerchantAccount = "JohnDick"
-      testCard = testUtils.TEST_CARD_VISA
-      merchantRef = testUtils.timestampMerchantRef()
-      amount = testUtils.TEST_EUR_AMOUNT
-      self.request = testUtils.CardPayment (amount, merchantRef, testMerchantAccount, testCard).payment
+      testCard = utils.testUtils.TEST_CARD_VISA
+      merchantRef = utils.testUtils.timestampMerchantRef()
+      amount = utils.testUtils.TEST_1_EUR_AMOUNT
+      self.request = utils.testUtils.CardPayment (testMerchantAccount, amount, testCard, merchantRef).paymentReq
     
     def validateJsonResponse(self):
       resp = self.endPoint.getResponse()
