@@ -1,59 +1,80 @@
+# ---------------------------------------------------------------------------------------
+# Unit testing of endPoint module
+# ---------------------------------------------------------------------------------------
+
 import endPoint
-import unittest, utils.testUtils
+import testData.merchants.marketPlaceMerchants
+import unittest
 
-class TestEndPoint(unittest.TestCase):
 
+# ---------------------------------------------------------------------------------------
+# Parameters
+# ---------------------------------------------------------------------------------------
+
+TEST_MERCHANT_ALIAS = 'JohnDickMarketPlace'
+DEBUG = False
+
+
+# ---------------------------------------------------------------------------------------
+# Unit tests for Authorization endPoint
+# ---------------------------------------------------------------------------------------
+   
+class TestAuthorizationEndPoint(unittest.TestCase):
+ 
   def setUp(self):
-    self.setCredentials()
-    self.setEndPoint(self.credentials)
- 
-  def setCredentials(self):
-    ''' To be overridden by child classes '''
+    ''' Setup a merchant and a payment request using the authorization endpoint'''
+    self.testMerchant = testData.merchants.marketPlaceMerchants.getMerchantFromAlias(TEST_MERCHANT_ALIAS) 
+    self.ep = endPoint.AuthorizePaymentEndPoint(self.testMerchant.psp_credentials, debug=DEBUG)
+    self.request = {
+      "amount": {
+        "currency": "EUR", 
+        "value": 100
+      }, 
+      "card": {
+        "cvc": "737", 
+        "expiryMonth": "8", 
+        "expiryYear": "2018", 
+        "holderName": "John Smith", 
+        "number": "4111111111111111"
+      }, 
+      "merchantAccount": self.testMerchant.merchantName, 
+      "reference": "ref"
+    }
+    
+  def test_BasicAuthorization(self):
+    ''' Happy case. Authorization is successful '''
+    resp = self.ep.sendRequest(self.request)
+    self.assertEqual(resp,0,'Response is %i not zero' % resp)
+    self.assertEqual(self.ep.httpResp,200,'HTTP response is not zero: %s' % self.ep.httpResp)
+    self.assertEqual(self.ep.jsonResponse["resultCode"], 'Authorised', 'Payment was NOT authorized') 
 
-  def setEndPoint(self, credentials):
-    ''' To be overridden by child classes '''
 
-  def createRequest(self):
-    ''' To be overridden by child classes '''
-         
-  def sendRequest(self):
-    self.endPoint.sendRequest(self.request)
-      
-  def validateHttpResponse(self):
-    self.assertEqual(self.endPoint.httpResp, 200)  #     'Is HTTP response code = 200'
+  def test_ConnectivityFailure(self):
+    '''Example that has a connectivity failure. Should get a 1 response.'''
+    raw_input('\nDisable your internet connection then press enter')
+    resp = self.ep.sendRequest(self.request)
+    self.assertEqual(resp,1,'Response is %i not 1' % resp)
+    raw_input('\nRe-enable your internet connection then press enter')
+    
 
-  def validateJsonResponse(self): 
-    ''' To be overridden by child classes '''
+  def test_WebServiceAuthorizationFailure(self):
+    ''' Example with authorization failure (send unknown user). Should get a 2 response. '''
+    merchant = testData.merchants.marketPlaceMerchants.Merchant(testData.merchants.marketPlaceMerchants.BAD_AUTH_MERCHANT)
+    self.ep = endPoint.AuthorizePaymentEndPoint(merchant.psp_credentials, debug=DEBUG)
+    resp = self.ep.sendRequest(self.request)
+    self.assertEqual(resp,2,'Response is %i not 2' % resp)
+    self.assertEqual(self.ep.httpResp,401,'Response is %i not 401' % self.ep.httpResp)
   
-  def test_Request(self):
-    self.createRequest()
-    self.sendRequest()
-    self.validateHttpResponse()
-    self.validateJsonResponse() 
-
-    
-class TestBasicAuthorization(TestEndPoint):
- 
-    def setCredentials(self):
-      self.credentials = utils.testUtils.TEST_CRED_PAYMENT
-    
-    def setEndPoint(self, credentials):
-      self.endPoint = endPoint.AuthorizePaymentEndPoint(credentials)
-    
-    def createRequest(self):
-      testMerchantAccount = "JohnDick"
-      testCard = utils.testUtils.TEST_CARD_VISA
-      merchantRef = utils.testUtils.timestampMerchantRef()
-      amount = utils.testUtils.TEST_1_EUR_AMOUNT
-      self.request = utils.testUtils.CardPayment (testMerchantAccount, amount, testCard, merchantRef).paymentReq
-    
-    def validateJsonResponse(self):
-      resp = self.endPoint.getResponse()
-      self.assertEqual(resp["resultCode"], 'Authorised')  #  "Is payment authorized?"
-
   
+  def test_AttemptToQueryMPAccountHolderWhichDoesNotExist(self):
+    ''' Used to test rthe case where http response is NOT 200 but contains JSON  '''
+    self.ep = endPoint.GetAccountHolderEndPoint(self.testMerchant.mp_credentials, debug=DEBUG)
+    resp = self.ep.sendRequest(  {'accountCode' : '9999999999'} )
+    self.assertEqual(resp,99,'Response is %i not 99' % resp)
+    self.assertEqual(self.ep.httpResp,422,'Response is %i - 422 expected' % self.ep.httpResp)
+
+    
 
 if __name__ == '__main__':
-    
-  suite = unittest.TestLoader().loadTestsFromTestCase(TestBasicAuthorization)
+  suite = unittest.TestLoader().loadTestsFromTestCase(TestAuthorizationEndPoint)
   unittest.TextTestRunner(verbosity=3).run(suite)

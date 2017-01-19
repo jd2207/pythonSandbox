@@ -1,44 +1,105 @@
-import accountHolder, unittest, testUtils
+import unittest
+import accountHolder, testData.misc
+import time
+
+
+# ---------------------------------------------------------------------------
+#  Constants 
+# ---------------------------------------------------------------------------
+
+TEST_MARKETPLACE_MERCHANT = 'JohnDickMarketPlace'
+DEBUG = True
+
+# ---------------------------------------------------------------------------
+#  The tests 
+# ---------------------------------------------------------------------------
 
 class TestAccountHolderCreation(unittest.TestCase):
 
-  def setUp(self):
-    self.credentials = ('ws_635247@MarketPlace.JohnDick', 'N)G^xjE#&<6Jc6r!~/mQMHM8F')
-    self.maxDiff = None
-    
   def test_DefaultCreation(self):
-    ah1 = accountHolder.AccountHolder( self.credentials, debug=True )  #   expectedDefaultAccountHolder 
-    self.assertIsInstance(ah1, accountHolder.AccountHolder)            #  is an accountHolder object
+    """ Create a new accountHolder with default values in the marketplace, then read it to a new accountHolder via the code"""
+    ah1 = accountHolder.AccountHolder(TEST_MARKETPLACE_MERCHANT, new=True, debug=True)
+    self.assertIsInstance(ah1, accountHolder.AccountHolder, 'Unable to create new accountHolder object')    
+ 
+    # Check the state
+    self.assertEqual(ah1.accountHolderDetails['email'], testData.misc.MP_TEST_EMAIL, 'Default email is wrong')
+    self.assertEqual(ah1.accountHolderDetails['individualDetails'], {"name": testData.misc.MP_TEST_NAME}, 'Default name iss wrong')
+    self.assertEqual(ah1.merchantCategoryCode, accountHolder.DEFAULT_MERCHANT_CATEGORY_CODE, 'Default merchant category code is wrong')
+    self.assertEqual(ah1.getConfig(), accountHolder.DEFAULT_STATE_CONFIG,'Default state configuration is wronng')
 
-    self.assertEqual(ah1.getCode(), ah1.accountHolderCode)
+    # Read this accountHolder via the accountHoder code 
+    ah2 = accountHolder.AccountHolder(TEST_MARKETPLACE_MERCHANT, code=ah1.accountHolderCode, debug=True)
+
+    self.assertEqual(ah2.accountHolderCode, ah1.accountHolderCode, 'accountHolder codes do not match ')
+    self.assertEqual(ah2.accountHolderDetails['email'], testData.misc.MP_TEST_EMAIL, 'Email addresses do not match')
+    self.assertEqual(ah2.accountHolderDetails['individualDetails'], {"name": testData.misc.MP_TEST_NAME}, 'Individual details do not match')
+    self.assertEqual(ah2.merchantCategoryCode, accountHolder.DEFAULT_MERCHANT_CATEGORY_CODE, 'Merchant category codes do not match')
+    self.assertEqual(ah2.getConfig(), accountHolder.DEFAULT_STATE_CONFIG,'State configurations do not match')
     
-    self.assertEqual(ah1.accountHolderDetails, testUtils.MP_TEST_ACCOUNT_HOLDER_DETAILS, 'check Default account holder details')
-    self.assertEqual(ah1.getConfig(), testUtils.MP_TEST_DEFAULT_STATE_CONFIG) # 'check default state configuration limits') 
-    
-    self.assertEqual(ah1.legalEntity, "Individual")  #  # test legal entity
+    # Read this accountHolder via the virtual account Code
+    ah3 = accountHolder.AccountHolder(TEST_MARKETPLACE_MERCHANT, virtualAccount=ah1.defaultVirtualAccountCode, debug=True)
+    self.assertEqual(ah3.accountHolderCode, ah1.accountHolderCode, 'accountHolder codes do not match ')
+    self.assertEqual(ah3.defaultVirtualAccountCode, ah1.defaultVirtualAccountCode, 'virtual account codes do not match ')
+    self.assertEqual(ah3.accountHolderDetails['email'], testData.misc.MP_TEST_EMAIL, 'Email addresses do not match')
+    self.assertEqual(ah3.accountHolderDetails['individualDetails'], {"name": testData.misc.MP_TEST_NAME}, 'Individual details do not match')
+    self.assertEqual(ah3.merchantCategoryCode, accountHolder.DEFAULT_MERCHANT_CATEGORY_CODE, 'Merchant category codes do not match')
+    self.assertEqual(ah3.getConfig(), accountHolder.DEFAULT_STATE_CONFIG,'State configurations do not match')
+
+    # Trivial test of update() method (does not trigger KYC)
+    ah3.accountHolderDetails['email'] = testData.misc.MP_TEST_EMAIL2
+    ah3.update()
+    self.assertEqual(ah3.accountHolderDetails['email'], testData.misc.MP_TEST_EMAIL2,'Check email update')
+ 
+    # Check the default state
+    s = ah3.getStates()
+    self.assertEqual(len(s), 1, 'More than one state')
+    self.assertEqual(s[0], accountHolder.LIMITED_PROCESSING, 'The state is not %s' % accountHolder.LIMITED_PROCESSING)
+    self.assertEqual(ah3.accountStatus['status'], 'Active', 'The state is not Active')
+
+
+  def test_CreationFromKnownPersonDetails(self):
+    ah = accountHolder.AccountHolder(TEST_MARKETPLACE_MERCHANT, new=True, details='TestPerson', debug=DEBUG)
+    self.assertEqual(ah.accountHolderDetails['individualDetails'], {
+      "name" : testData.misc.MP_TEST_NAME,
+      "personalData" : testData.misc.MP_TEST_PERSONAL_DATA
+      }, 'Individual details do not match')
   
-  # test Account Status 
-    self.assertEqual(ah1.getStatus()["status"],"Active")
-    self.assertEqual(ah1.getStatus()["states"],[ { "AccountState" : testUtils.MP_TEST_DEFAULT_LIMITEDPROCESSING } ] )
-                                           
-   #    that status = Active
-   #    that there exists a stateType = LimitedProcessing
-   #    that there is NO state type = LimitlessProcessing
-   #    that there is no state = LimitedPayout
-   #    that there is no state = LimitelessPayoit
-   
-   # test Requirments for next state
-   
-   # test kycVerifiction Results
-   
-# def test_CreationFromExisting(self):
-   
-#    ah2 = accountHolder.getAccountHolder(ah1.getCode(), self.credentials, debug=True)  # can read this accountHolder and create a new object
-   # self.assertEquals(ah1.dumptoDict(), ah2.dumptoDict()) # 'loaded object should be equal to the created object')  
-#    print json.dumps(ah1.dumptoDict(), sort_keys=True, indent=4)
-#    print json.dumps(ah2.dumptoDict(), sort_keys=True, indent=4)
+  def test_UploadTestPassportLimitless(self):
+    ah = accountHolder.AccountHolder(TEST_MARKETPLACE_MERCHANT, new=True, details='TestPerson', debug=DEBUG)
+    doc = testData.misc.MP_TEST_PASSPORT_LIMITLESS
+    ah.accountHolderDetails['individualDetails']['name']['lastName'] = 'TestData'
+    ah.update() 
+    ah.uploadDocument(doc)
+    ah.dump()
 
+  def test_DefaultCreationThenForceLimitedPayout(self):
+    ah = accountHolder.AccountHolder(TEST_MARKETPLACE_MERCHANT, new=True, details='TestPerson', debug=DEBUG)
+    ah.forceLimitedPayout()
 
+    states = ah.getStates()
+    self.assertEqual(len(states), 2, 'Should be two states')
+    for s in states:
+      self.assertTrue(s in (accountHolder.LIMITED_PROCESSING, accountHolder.LIMITED_PAYOUT), 'Unexpected state %s' % s)
+    
+ 
+  ''' 
+  def test_DefaultCreationThenSplitPayment(self):
+
+    merchantAccount = 'JohnDickMarketPlace'
+    ah = accountHolder.AccountHolder(merchantAccount, new=True, debug=DEBUG)
+    makeOneEuroSplitPayment(merchantAccount, ah.defaultVirtualAccountCode)
+  '''
+
+  '''
+  def test_SuspendUnsuspend(self):
+    merchantAccount = 'JohnDickMarketPlace'
+    ah = accountHolder.AccountHolder(merchantAccount, new=True, debug=DEBUG)
+    makeOneEuroSplitPayment(merchantAccount, ah.defaultVirtualAccountCode)
+    ah.suspend()
+  '''
+  
+  
+    
 if __name__ == '__main__':
     
   suite = unittest.TestLoader().loadTestsFromTestCase(TestAccountHolderCreation)
