@@ -1,0 +1,61 @@
+Notes for adyen python stuff
+==============================
+
+
+Basic tools
+==========
+
+* utils/cardPayment.py  - command line utility for making payments (including marketpay split payments)
+* accountHolder.AccountHolder class - when run as main acts as a command line utility for creating new / reading existing accountHolder
+
+
+Test Cycle
+============
+* 1. endPoint via testEndPoint
+
+* 2. cardPayment via testCardPayment and running cardPayment from command line:
+
+  Basic payment to TEST marketplace merchant with alias 'JohnDickMarketPlace'
+	cardPayment.py JohnDickMarketPlace --debug    
+
+  As above but with 10 GBP, rehearse mode 
+    cardPayment.py JohnDickMarketPlace --rehearse --value 1000 --currency GBP --mref '10 Pounds' --debug   
+    
+  As above but no rehearse
+    cardPayment.py JohnDickMarketPlace --value 1000 --currency GBP --mref '10 Pounds' --debug   
+    
+  A bad marketpay split payment attempt 
+    cardPayment.py JohnDickMarketPlace --value 1000 --currency GBP --mref '10 Pounds' --split --debug 
+    
+  A good marketpay split payment attempt - full split
+    cardPayment.py JohnDickMarketPlace --value 1000 --currency GBP --mref '10 Pounds' --split 1000 --marketPayAccount 170523285 --debug 
+ 
+  As above but partial split 
+    cardPayment.py JohnDickMarketPlace --value 1000 --currency GBP --mref '10 Pounds' --split 500 --marketPayAccount 170523285 --debug 
+
+  A live card attempt (leave rehearse switch on!) 
+	cardPayment.py JohnDickMarketPlace --rehearse --live --debug    
+
+
+3. accountHolder tests (via testAccountHolder and running accountHolder from command line)
+
+
+To be done
+==========
+- check current state into git
+- more tests to accountHolder/testAccountHolder
+- add force to LimitlessPayout, LimitlessProcessing
+- make getBalance have a cleaner output
+
+
+Nice to have
+===============
+- When creating a new accountHolder need to throw an exception if the accountCode already exists
+- Need total credited/debited/transferred etc to each accountHolder ?
+- Need a way of flagging when state deadlines are close to expiry?
+- Need a list of all created accountHolders (for a given merchant, for a given time interval)
+
+
+
+
+
