@@ -93,7 +93,7 @@ class AccountHolder(object):
          in this case virtualAccount and details are ignored
      
      - details - used to specify a handle identifying a known person's details (as specified in testData.individuals)
-         if new flag is not set, this is ignored.
+         only used if new flag is set.
          
      Notes:
        virtualAccount argument is used to read an existing marketplace accountHolder by virtual account lookup. 
@@ -109,7 +109,7 @@ class AccountHolder(object):
     self.debug = debug
 
     logging.basicConfig(format = '%(asctime)s %(levelname)s:%(message)s', 
-                        level = (logging.DEBUG if self.debug else logging.INFO ))    
+                        level = (logging.DEBUG if self.debug else logging.WARNING))    
     logging.debug('Merchant account: %s' % self.merchantAccount.merchantName)
     logging.debug('Credential user name: %s' % self.credentials[0])
     logging.debug('Account Holder Code: %s' % code)
@@ -144,7 +144,7 @@ class AccountHolder(object):
       
       if code: 
         self.accountHolderCode = code
-        logging.info('Attempting to read accountHolder by accountHolderCode: %s' % self.accountHolderCode)
+        logging.debug('Attempting to read accountHolder by accountHolderCode: %s' % self.accountHolderCode)
       else:
         if virtualAccount:
           self.accountHolderCode = None
@@ -177,7 +177,7 @@ class AccountHolder(object):
  
       # accountHolderDetails       
       self.address = self.accountHolderDetails["address"] if "address" in self.accountHolderDetails.keys() else None
-      self.bankAccountDetails = self.accountHolderDetails["bankAccountDetail"] if "bankAccountDetail" in self.accountHolderDetails.keys() else None
+      self.bankAccountDetails = self.accountHolderDetails["bankAccountDetails"] if "bankAccountDetails" in self.accountHolderDetails.keys() else None
       self.email = self.accountHolderDetails["email"] if "email" in self.accountHolderDetails.keys() else None
       self.individualDetails = self.accountHolderDetails["individualDetails"] if "individualDetails" in self.accountHolderDetails.keys() else None
       self.merchantCategoryCode = self.accountHolderDetails["merchantCategoryCode"] if "merchantCategoryCode" in self.accountHolderDetails.keys() else None
@@ -227,13 +227,23 @@ class AccountHolder(object):
       logging.error('FATAL: Unable perform update for accountHolderCode %s' % self.accountHolderCode)
       sys.exit()
       
-
     
   def getBalance(self):
     ep = endPoint.endPoint.AccountHolderBalanceEndPoint(self.credentials, live=self.live, debug=self.debug)
     resp = ep.sendRequest({ "accountHolderCode" : self.accountHolderCode }) 
     if resp == 0 or resp == 99:
-      return ep.getJsonResponse()
+      jsonResp  = ep.getJsonResponse()
+      totalBalance = jsonResp['totalBalance'] if 'totalBalance' in jsonResp.keys() else None
+      if totalBalance:
+        pendingBalance = totalBalance['pendingBalance'][0]['Amount']['value'] if 'pendingBalance' in totalBalance.keys() else 0
+        balance = totalBalance['balance'][0]['Amount']['value'] if 'balance' in totalBalance.keys() else 0
+      else:
+        pendingBalance = 0
+        balance = 0
+      
+      return { 'PendingBalance' : pendingBalance,
+                      'Balance' : balance
+             }
     else:
       logging.error('FATAL: Unable get balance for accountHolderCode %s' % self.accountHolderCode)
       return None
@@ -249,7 +259,6 @@ class AccountHolder(object):
       logging.error('FATAL: Unable perform RefundAll for accountHolderCode %s' % self.accountHolderCode)
       return None
       
-  
   def getTransactionList(self):
     ep = endPoint.endPoint.TransactionListEndPoint(self.credentials, self.live, debug=self.debug)
     if ( ep.sendRequest({ "accountHolderCode" : self.accountHolderCode }) ) == 0:
@@ -258,6 +267,69 @@ class AccountHolder(object):
       logging.error('FATAL: Unable get transaction list for accountHolderCode %s' % self.accountHolderCode)
       return None
       
+  
+  def getTransactionData(self, txTypes=[]):
+    ''' Returns a summary of ALL transaction data for given virtualAccountCode - use debug mode, to see full transaction list in JSON response ''' 
+ 
+    txData = {}
+    
+    if not txTypes:       # if not specified, use all
+      txTypes = [
+          'PendingCredit',     
+          'CreditFailed',
+          'Credited',
+          'PendingDebit',
+          'DebitFailed', 
+          'Debited',
+          'DebitReversedReceived',
+          'DebitedReversed',
+          'ChargebackReceived',
+          'Chargeback',
+          'ChargebackReversedReceived',
+          'ChargebackReversed',
+          'Payout',
+          'PayoutReversed',
+          'FundTransfer'
+      ]
+ 
+    for txType in txTypes:
+      txData[txType] = { 'count' : 0, 'value' : 0 } 
+
+    morePages = True
+    page = 0
+    txList = []
+    
+    ep = endPoint.endPoint.TransactionListEndPoint(self.credentials, self.live, debug=self.debug)
+    req = { "accountHolderCode" : self.accountHolderCode }
+    req['transactionStatuses'] = txTypes
+    req['transactionListsPerAccount'] = [ 
+      { 'TransactionListForAccount' : 
+        { 'accountCode' : self.defaultVirtualAccountCode }
+      }
+    ]
+    
+    while morePages:          # reading all pages only valid if virtualAccount code is specified
+      page += 1 
+      req['transactionListsPerAccount'][0]['TransactionListForAccount']['page'] = page
+        
+      if (ep.sendRequest( req )) == 0:
+        accTxList = ep.getJsonResponse()["accountTransactionLists"][0]["AccountTransactionList"]
+        morePages = (accTxList['hasNextPage'] == 'true')
+      else: 
+        logging.error('FATAL: Unable get transaction list for accountHolderCode %s' % self.accountHolderCode)
+        return None
+ 
+      txList += ( accTxList['transactions'] if 'transactions' in accTxList.keys() else [] )
+      
+    for tx in txList:
+      txType = tx['Transaction']['transactionStatus']
+      txData[txType]['count'] += 1
+      txData[txType]['value'] += tx['Transaction']['amount']['value']
+          
+    return txData
+      
+
+
   
   def suspend(self):
     ep = endPoint.endPoint.SuspendAccountHolderEndPoint(self.credentials, self.live, debug=self.debug)
@@ -333,9 +405,14 @@ class AccountHolder(object):
 
   def getStates(self):
     """ Return an array of the labels of all active states """
+ 
     states = []
     for s in self.accountStatus['states']:
-      states.append(s['AccountState']['stateType'])
+      accState = s['AccountState']
+      states.append( { 'state' : accState['stateType'],
+                       'deadline' : accState['stateDeadline'] if "stateDeadline" in accState.keys() else None
+                    }
+                  )
     return states
 
 

@@ -17,7 +17,7 @@ class AbstractEndPoint(object):
 		self.credentials=credentials				# default credentials (http user and passwprd) for the endpoint
 		self.jsonResponse = None
 		
-		logging.basicConfig(format = '%(asctime)s %(levelname)s:%(message)s', level = (logging.DEBUG if self.debug else logging.INFO ))		
+		logging.basicConfig(format = '%(asctime)s %(levelname)s:%(message)s', level = (logging.DEBUG if self.debug else logging.WARNING ))		
 
 	def sendRequest(self, endPointRequest, retry=False):
 		""" Returns 0 for success, else returns an error code:
@@ -27,7 +27,7 @@ class AbstractEndPoint(object):
 		"""
 	
 		self.request = endPointRequest
-		logging.info(' >>> Sending JSON to endpoint: %s' % self.url)
+		logging.debug(' >>> Sending JSON to endpoint: %s' % self.url)
 		logging.debug(' >>> JSON request: \n%s\n' % self.dumpRequest())
 
 		retryPragma = None
@@ -48,7 +48,7 @@ class AbstractEndPoint(object):
 
 		else:																										# got some kind of http response
 			self.httpResp = resp.status_code
-			logging.info('HTTP response %s' % self.httpResp)
+			logging.debug('HTTP response %s' % self.httpResp)
 
 			try:
 				self.jsonResponse = resp.json()
@@ -133,9 +133,6 @@ class DeleteBankAcountsEndPoint(AbstractEndPoint):
 	def setURL(self):
 		self.url = 'https://cal-'+self.system+'.adyen.com/cal/services/Account/v1/deleteBankAccounts'
 
-class GetKYCCheckReviewsEndPoint(AbstractEndPoint):
-	def setURL(self):
-		self.url = 'https://cal-'+self.system+'.adyen.com/cal/services/Account/v1/getKYCCheckReviews'
 
 
 # Funds related ----------------------------------------------------------------------------------

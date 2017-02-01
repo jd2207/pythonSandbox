@@ -1,7 +1,7 @@
 import unittest
 import accountHolder, testData.misc
 import time
-
+import utils.testUtils
 
 # ---------------------------------------------------------------------------
 #  Constants 
@@ -80,27 +80,41 @@ class TestAccountHolderCreation(unittest.TestCase):
     self.assertEqual(len(states), 2, 'Should be two states')
     for s in states:
       self.assertTrue(s in (accountHolder.LIMITED_PROCESSING, accountHolder.LIMITED_PAYOUT), 'Unexpected state %s' % s)
-    
+
  
-  ''' 
-  def test_DefaultCreationThenSplitPayment(self):
-
-    merchantAccount = 'JohnDickMarketPlace'
-    ah = accountHolder.AccountHolder(merchantAccount, new=True, debug=DEBUG)
-    makeOneEuroSplitPayment(merchantAccount, ah.defaultVirtualAccountCode)
-  '''
-
-  '''
-  def test_SuspendUnsuspend(self):
-    merchantAccount = 'JohnDickMarketPlace'
-    ah = accountHolder.AccountHolder(merchantAccount, new=True, debug=DEBUG)
-    makeOneEuroSplitPayment(merchantAccount, ah.defaultVirtualAccountCode)
-    ah.suspend()
-  '''
   
+
+class TestAccountHolderFunds(unittest.TestCase):
+
   
+  def setUp(self):
+    merchantAccount = 'JohnDickMarketPlace'
+    ahCode = '1481325809'
+    live = False
+  
+    self.ah = accountHolder.AccountHolder(merchantAccount, code=ahCode, live=live, debug=DEBUG)
+ 
+ 
+  def test_getTxData(self):
+    resp = self.ah.getTransactionData(txTypes=['Debited','Credited'])
+    self.assertEqual(resp['Credited'], { "count": 4, "value": 510200 }, 'Unexpected Credited')
+    self.assertEqual(resp['Debited'], { "count": 2, "value": -200 }, 'Unexpected Debited')    
+
+ 
+  def test_getBalance(self):
+    resp = self.ah.getBalance()
+    self.assertEqual(resp['Balance'], 510000, 'Unexpected Balance')
+    self.assertEqual(resp['PendingBalance'], 0, 'Unexpected PendingBalance')
+
     
 if __name__ == '__main__':
-    
-  suite = unittest.TestLoader().loadTestsFromTestCase(TestAccountHolderCreation)
+
+# AccountHolder Creation tests    
+#  suite = unittest.TestLoader().loadTestsFromTestCase(TestAccountHolderCreation)
+#  unittest.TextTestRunner(verbosity=3).run(suite)
+  
+# AccountHolder reading tests  
+  suite = unittest.TestLoader().loadTestsFromTestCase(TestAccountHolderFunds)
   unittest.TextTestRunner(verbosity=3).run(suite)
+  
+  

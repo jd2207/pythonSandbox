@@ -7,6 +7,7 @@ Basic tools
 
 * utils/cardPayment.py  - command line utility for making payments (including marketpay split payments)
 * accountHolder.AccountHolder class - when run as main acts as a command line utility for creating new / reading existing accountHolder
+* utils/accountHolderQuery - used to define views and filters of accountHolder data, can be used via command line
 
 
 Test Cycle
@@ -42,20 +43,14 @@ Test Cycle
 
 To be done
 ==========
-- check current state into git
-- more tests to accountHolder/testAccountHolder
-- add force to LimitlessPayout, LimitlessProcessing
-- make getBalance have a cleaner output
+
+- more tests to accountHolder/testAccountHolder?
+- add force to LimitlessPayout, LimitlessProcessing?
 
 
 Nice to have
 ===============
 - When creating a new accountHolder need to throw an exception if the accountCode already exists
-- Need total credited/debited/transferred etc to each accountHolder ?
-- Need a way of flagging when state deadlines are close to expiry?
-- Need a list of all created accountHolders (for a given merchant, for a given time interval)
-
-
 
 
 
